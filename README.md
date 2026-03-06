@@ -14,6 +14,7 @@
 ## 本地启动
 
 1. 准备 MySQL 8+ 数据库，并创建库 `second_class_credit`
+   - 可直接执行 `sql/create_database.sql`
 2. 修改 `src/main/resources/application.yml` 中数据库连接
 3. 执行命令：
 
