@@ -1,5 +1,6 @@
 target/
 .m2/
+.ace-tool/
 .idea/
 *.iml
 .vscode/

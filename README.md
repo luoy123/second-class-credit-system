@@ -15,11 +15,23 @@
 
 1. 准备 MySQL 8+ 数据库，并创建库 `second_class_credit`
    - 可直接执行 `sql/create_database.sql`
-2. 修改 `src/main/resources/application.yml` 中数据库连接
-3. 执行命令：
+2. 初始化表结构与基础规则数据
+   - 执行 `sql/init_schema.sql`
+   - 执行 `sql/init_seed_data.sql`
+3. 配置数据库连接环境变量（推荐）
+   - `DB_URL`
+   - `DB_USERNAME`
+   - `DB_PASSWORD`
+4. 执行命令：
 
 ```bash
 mvn spring-boot:run
+```
+
+5. 运行接口联调脚本（可选）
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "./scripts/api-smoke-test.ps1"
 ```
 
 ## API 示例
@@ -34,3 +46,5 @@ mvn spring-boot:run
 
 - 开发流程规划：`docs/DEVELOPMENT_PLAN.md`
 - 技术选型说明：`docs/TECH_STACK.md`
+- 数据库初始化说明：`docs/DB_SETUP.md`
+- API 联调说明：`docs/API_DEBUG.md`
