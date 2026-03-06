@@ -42,5 +42,6 @@ CREATE TABLE IF NOT EXISTS sc_credit_record (
     CONSTRAINT fk_sc_credit_record_student FOREIGN KEY (student_id) REFERENCES sc_student(id),
     CONSTRAINT fk_sc_credit_record_activity FOREIGN KEY (activity_id) REFERENCES sc_activity(id),
     INDEX idx_sc_credit_record_student_status (student_id, status),
+    INDEX idx_sc_credit_record_status_created (status, created_at),
     INDEX idx_sc_credit_record_created_at (created_at)
 );
