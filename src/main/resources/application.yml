@@ -16,3 +16,11 @@ spring:
 
 server:
   port: 8080
+
+auth:
+  admin:
+    username: ${AUTH_ADMIN_USERNAME:admin}
+    password: ${AUTH_ADMIN_PASSWORD:admin123}
+  jwt:
+    secret: ${JWT_SECRET:secondClassCreditJwtSecretKeyForHmacSha256_2026}
+    expire-seconds: ${JWT_EXPIRE_SECONDS:7200}

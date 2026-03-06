@@ -1,5 +1,12 @@
 $baseUrl = "http://127.0.0.1:8080"
-$adminHeaders = @{ "X-Role" = "ADMIN" }
+
+$loginBody = @{
+    username = "admin"
+    password = "admin123"
+} | ConvertTo-Json
+
+$loginResp = Invoke-RestMethod -Method Post -Uri "$baseUrl/api/auth/login" -ContentType "application/json" -Body $loginBody
+$adminHeaders = @{ "Authorization" = "Bearer $($loginResp.data.token)" }
 
 $studentBody = @{
     studentNo = "20260001"
@@ -59,6 +66,9 @@ Invoke-WebRequest -Method Get -Uri "$baseUrl/api/credits/review-logs/export?reco
 
 Write-Host "Apply Result:"
 $applyResp | ConvertTo-Json -Depth 8
+
+Write-Host "`nLogin Result:"
+$loginResp | ConvertTo-Json -Depth 8
 
 Write-Host "`nApprove Result:"
 $approveResp | ConvertTo-Json -Depth 8

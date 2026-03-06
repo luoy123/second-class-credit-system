@@ -7,7 +7,8 @@
   - `sql/init_schema.sql`
   - `sql/init_seed_data.sql`
 - 服务已启动：`mvn spring-boot:run`
-- 管理员接口需携带请求头：`X-Role: ADMIN`
+- 管理员接口推荐携带请求头：`Authorization: Bearer <token>`
+- 兼容方式：`X-Role: ADMIN`
 - 已执行增量脚本（若是旧库）：`sql/patch_add_credit_review_log_table.sql`
 
 ## 推荐联调顺序
@@ -20,6 +21,14 @@
 6. 查询统计分析接口
 
 ## Curl 示例
+
+### 0) 管理员登录获取 JWT
+
+```bash
+TOKEN=$(curl -s -X POST "http://127.0.0.1:8080/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d "{\"username\":\"admin\",\"password\":\"admin123\"}" | jq -r '.data.token')
+```
 
 ### 1) 创建学生
 
@@ -50,7 +59,7 @@ curl -X POST "http://127.0.0.1:8080/api/credits/apply" \
 ```bash
 curl -X POST "http://127.0.0.1:8080/api/credits/1/approve" \
   -H "Content-Type: application/json" \
-  -H "X-Role: ADMIN" \
+  -H "Authorization: Bearer $TOKEN" \
   -d "{\"remark\":\"审核通过\"}"
 ```
 
@@ -59,7 +68,7 @@ curl -X POST "http://127.0.0.1:8080/api/credits/1/approve" \
 ```bash
 curl -X POST "http://127.0.0.1:8080/api/credits/2/reject" \
   -H "Content-Type: application/json" \
-  -H "X-Role: ADMIN" \
+  -H "Authorization: Bearer $TOKEN" \
   -d "{\"remark\":\"材料不完整\"}"
 ```
 
@@ -68,7 +77,7 @@ curl -X POST "http://127.0.0.1:8080/api/credits/2/reject" \
 ```bash
 curl -X POST "http://127.0.0.1:8080/api/credits/batch/approve" \
   -H "Content-Type: application/json" \
-  -H "X-Role: ADMIN" \
+  -H "Authorization: Bearer $TOKEN" \
   -d "{\"recordIds\":[1,2,3],\"remark\":\"批量审核通过\"}"
 ```
 
@@ -77,7 +86,7 @@ curl -X POST "http://127.0.0.1:8080/api/credits/batch/approve" \
 ```bash
 curl -X POST "http://127.0.0.1:8080/api/credits/batch/reject" \
   -H "Content-Type: application/json" \
-  -H "X-Role: ADMIN" \
+  -H "Authorization: Bearer $TOKEN" \
   -d "{\"recordIds\":[4,5],\"remark\":\"材料不齐\"}"
 ```
 
@@ -96,25 +105,25 @@ curl "http://127.0.0.1:8080/api/credits/students/1/records/page?page=0&size=10&s
 ### 10) 分页查询待审核记录
 
 ```bash
-curl -H "X-Role: ADMIN" "http://127.0.0.1:8080/api/credits/pending/page?page=0&size=10"
+curl -H "Authorization: Bearer $TOKEN" "http://127.0.0.1:8080/api/credits/pending/page?page=0&size=10"
 ```
 
 ### 11) 分页查询审批日志（可按动作/结果/日期筛选）
 
 ```bash
-curl -H "X-Role: ADMIN" "http://127.0.0.1:8080/api/credits/review-logs/page?page=0&size=10&action=APPROVE&success=true&startDate=2026-03-01&endDate=2026-03-31"
+curl -H "Authorization: Bearer $TOKEN" "http://127.0.0.1:8080/api/credits/review-logs/page?page=0&size=10&action=APPROVE&success=true&startDate=2026-03-01&endDate=2026-03-31"
 ```
 
 ### 12) 导出审批日志 CSV
 
 ```bash
-curl -L -H "X-Role: ADMIN" "http://127.0.0.1:8080/api/credits/review-logs/export?action=APPROVE&success=true&limit=1000" -o "credit_review_logs.csv"
+curl -L -H "Authorization: Bearer $TOKEN" "http://127.0.0.1:8080/api/credits/review-logs/export?action=APPROVE&success=true&limit=1000" -o "credit_review_logs.csv"
 ```
 
 ### 13) 查询审批日志统计
 
 ```bash
-curl -H "X-Role: ADMIN" "http://127.0.0.1:8080/api/credits/review-logs/stats?action=APPROVE&startDate=2026-03-01&endDate=2026-03-31"
+curl -H "Authorization: Bearer $TOKEN" "http://127.0.0.1:8080/api/credits/review-logs/stats?action=APPROVE&startDate=2026-03-01&endDate=2026-03-31"
 ```
 
 ### 14) 查询分类统计
@@ -150,13 +159,13 @@ curl "http://127.0.0.1:8080/api/credits/analytics/ranking?topN=10"
 ### 19) 导出分类统计 CSV
 
 ```bash
-curl -L -H "X-Role: ADMIN" "http://127.0.0.1:8080/api/credits/analytics/export/categories" -o "category_statistics.csv"
+curl -L -H "Authorization: Bearer $TOKEN" "http://127.0.0.1:8080/api/credits/analytics/export/categories" -o "category_statistics.csv"
 ```
 
 ### 20) 导出排名统计 CSV
 
 ```bash
-curl -L -H "X-Role: ADMIN" "http://127.0.0.1:8080/api/credits/analytics/export/ranking?topN=10" -o "student_ranking.csv"
+curl -L -H "Authorization: Bearer $TOKEN" "http://127.0.0.1:8080/api/credits/analytics/export/ranking?topN=10" -o "student_ranking.csv"
 ```
 
 ## 审批日志核验（SQL）

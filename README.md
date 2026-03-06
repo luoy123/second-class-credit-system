@@ -26,6 +26,11 @@
    - `DB_URL`
    - `DB_USERNAME`
    - `DB_PASSWORD`
+   - （可选）认证相关：
+     - `AUTH_ADMIN_USERNAME`
+     - `AUTH_ADMIN_PASSWORD`
+     - `JWT_SECRET`
+     - `JWT_EXPIRE_SECONDS`
 4. 执行命令：
 
 ```bash
@@ -40,9 +45,12 @@ powershell -ExecutionPolicy Bypass -File "./scripts/api-smoke-test.ps1"
 
 ## API 示例
 
-- 管理员接口需携带请求头：`X-Role: ADMIN`
+- 管理员接口支持以下两种鉴权方式：
+  - `Authorization: Bearer <token>`（推荐，先调用登录接口获取）
+  - `X-Role: ADMIN`（兼容保留）
 - 审批与批量审批接口会自动写入 `sc_credit_review_log`
 
+- `POST /api/auth/login`：管理员登录并获取 JWT
 - `POST /api/students`：创建学生
 - `GET /api/students/{id}`：查询学生
 - `POST /api/activities`：创建活动

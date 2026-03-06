@@ -62,36 +62,44 @@ public class CreditController {
     public ApiResponse<CreditRecord> approve(
             @PathVariable Long recordId,
             @RequestHeader(value = "X-Role", required = false) String roleHeader,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @Valid @RequestBody(required = false) CreditReviewRequest request) {
-        roleAuthService.requireAdmin(roleHeader);
+        roleAuthService.requireAdmin(roleHeader, authorizationHeader);
+        String operatorRole = roleHeader == null || roleHeader.isBlank() ? "ADMIN" : roleHeader;
         String remark = request == null ? null : request.getRemark();
-        return ApiResponse.success(creditService.approve(recordId, remark, roleHeader));
+        return ApiResponse.success(creditService.approve(recordId, remark, operatorRole));
     }
 
     @PostMapping("/{recordId}/reject")
     public ApiResponse<CreditRecord> reject(
             @PathVariable Long recordId,
             @RequestHeader(value = "X-Role", required = false) String roleHeader,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @Valid @RequestBody(required = false) CreditReviewRequest request) {
-        roleAuthService.requireAdmin(roleHeader);
+        roleAuthService.requireAdmin(roleHeader, authorizationHeader);
+        String operatorRole = roleHeader == null || roleHeader.isBlank() ? "ADMIN" : roleHeader;
         String remark = request == null ? null : request.getRemark();
-        return ApiResponse.success(creditService.reject(recordId, remark, roleHeader));
+        return ApiResponse.success(creditService.reject(recordId, remark, operatorRole));
     }
 
     @PostMapping("/batch/approve")
     public ApiResponse<CreditBatchReviewResult> batchApprove(
             @RequestHeader(value = "X-Role", required = false) String roleHeader,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @Valid @RequestBody CreditBatchReviewRequest request) {
-        roleAuthService.requireAdmin(roleHeader);
-        return ApiResponse.success(creditService.batchApprove(request.getRecordIds(), request.getRemark(), roleHeader));
+        roleAuthService.requireAdmin(roleHeader, authorizationHeader);
+        String operatorRole = roleHeader == null || roleHeader.isBlank() ? "ADMIN" : roleHeader;
+        return ApiResponse.success(creditService.batchApprove(request.getRecordIds(), request.getRemark(), operatorRole));
     }
 
     @PostMapping("/batch/reject")
     public ApiResponse<CreditBatchReviewResult> batchReject(
             @RequestHeader(value = "X-Role", required = false) String roleHeader,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @Valid @RequestBody CreditBatchReviewRequest request) {
-        roleAuthService.requireAdmin(roleHeader);
-        return ApiResponse.success(creditService.batchReject(request.getRecordIds(), request.getRemark(), roleHeader));
+        roleAuthService.requireAdmin(roleHeader, authorizationHeader);
+        String operatorRole = roleHeader == null || roleHeader.isBlank() ? "ADMIN" : roleHeader;
+        return ApiResponse.success(creditService.batchReject(request.getRecordIds(), request.getRemark(), operatorRole));
     }
 
     @GetMapping("/students/{studentId}/summary")
@@ -119,15 +127,17 @@ public class CreditController {
     @GetMapping("/pending/page")
     public ApiResponse<PageResult<CreditRecord>> listPendingRecordsPage(
             @RequestHeader(value = "X-Role", required = false) String roleHeader,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @RequestParam(defaultValue = "0") @Min(value = 0, message = "page 不能小于 0") int page,
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "size 不能小于 1") @Max(value = 100, message = "size 不能大于 100") int size) {
-        roleAuthService.requireAdmin(roleHeader);
+        roleAuthService.requireAdmin(roleHeader, authorizationHeader);
         return ApiResponse.success(creditService.listPendingRecordsPage(page, size));
     }
 
     @GetMapping("/review-logs/page")
     public ApiResponse<PageResult<CreditReviewLog>> listReviewLogsPage(
             @RequestHeader(value = "X-Role", required = false) String roleHeader,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @RequestParam(required = false) Long recordId,
             @RequestParam(required = false) CreditReviewAction action,
             @RequestParam(required = false) Boolean success,
@@ -135,32 +145,34 @@ public class CreditController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "0") @Min(value = 0, message = "page 不能小于 0") int page,
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "size 不能小于 1") @Max(value = 100, message = "size 不能大于 100") int size) {
-        roleAuthService.requireAdmin(roleHeader);
+        roleAuthService.requireAdmin(roleHeader, authorizationHeader);
         return ApiResponse.success(creditReviewLogService.listLogsPage(recordId, action, success, startDate, endDate, page, size));
     }
 
     @GetMapping("/review-logs/stats")
     public ApiResponse<CreditReviewLogStatResponse> getReviewLogStats(
             @RequestHeader(value = "X-Role", required = false) String roleHeader,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @RequestParam(required = false) Long recordId,
             @RequestParam(required = false) CreditReviewAction action,
             @RequestParam(required = false) Boolean success,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        roleAuthService.requireAdmin(roleHeader);
+        roleAuthService.requireAdmin(roleHeader, authorizationHeader);
         return ApiResponse.success(creditReviewLogService.getLogStats(recordId, action, success, startDate, endDate));
     }
 
     @GetMapping("/review-logs/export")
     public ResponseEntity<byte[]> exportReviewLogsCsv(
             @RequestHeader(value = "X-Role", required = false) String roleHeader,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @RequestParam(required = false) Long recordId,
             @RequestParam(required = false) CreditReviewAction action,
             @RequestParam(required = false) Boolean success,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "1000") @Min(value = 1, message = "limit 不能小于 1") @Max(value = 5000, message = "limit 不能大于 5000") int limit) {
-        roleAuthService.requireAdmin(roleHeader);
+        roleAuthService.requireAdmin(roleHeader, authorizationHeader);
         String csv = creditReviewLogService.exportLogsCsv(recordId, action, success, startDate, endDate, limit);
         return buildCsvResponse(csv, "credit_review_logs.csv");
     }
@@ -194,8 +206,9 @@ public class CreditController {
 
     @GetMapping("/analytics/export/categories")
     public ResponseEntity<byte[]> exportCategoryStatisticsCsv(
-            @RequestHeader(value = "X-Role", required = false) String roleHeader) {
-        roleAuthService.requireAdmin(roleHeader);
+            @RequestHeader(value = "X-Role", required = false) String roleHeader,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        roleAuthService.requireAdmin(roleHeader, authorizationHeader);
         String csv = creditReportService.exportCategoryStatisticsCsv();
         return buildCsvResponse(csv, "category_statistics.csv");
     }
@@ -203,8 +216,9 @@ public class CreditController {
     @GetMapping("/analytics/export/ranking")
     public ResponseEntity<byte[]> exportRankingCsv(
             @RequestHeader(value = "X-Role", required = false) String roleHeader,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "topN 不能小于 1") @Max(value = 100, message = "topN 不能大于 100") int topN) {
-        roleAuthService.requireAdmin(roleHeader);
+        roleAuthService.requireAdmin(roleHeader, authorizationHeader);
         String csv = creditReportService.exportStudentRankingCsv(topN);
         return buildCsvResponse(csv, "student_ranking.csv");
     }

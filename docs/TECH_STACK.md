@@ -20,6 +20,9 @@
 - **Spring Validation**
     - 统一请求参数校验
     - 在入口层保障数据合法性
+- **JJWT**
+    - 生成与校验 JWT 访问令牌
+    - 支撑管理员接口的 Bearer Token 鉴权
 - **Lombok**
     - 简化实体与 DTO 模板代码
     - 提升开发效率
