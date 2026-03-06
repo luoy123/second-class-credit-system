@@ -15,6 +15,7 @@ import com.secondclass.credit.domain.entity.CreditRecord;
 import com.secondclass.credit.domain.enums.CreditStatus;
 import com.secondclass.credit.service.CreditReportService;
 import com.secondclass.credit.service.CreditService;
+import com.secondclass.credit.service.RoleAuthService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -42,6 +44,7 @@ public class CreditController {
 
     private final CreditService creditService;
     private final CreditReportService creditReportService;
+    private final RoleAuthService roleAuthService;
 
     @PostMapping("/apply")
     public ApiResponse<CreditRecord> apply(@Valid @RequestBody CreditApplyRequest request) {
@@ -51,7 +54,9 @@ public class CreditController {
     @PostMapping("/{recordId}/approve")
     public ApiResponse<CreditRecord> approve(
             @PathVariable Long recordId,
+            @RequestHeader(value = "X-Role", required = false) String roleHeader,
             @Valid @RequestBody(required = false) CreditReviewRequest request) {
+        roleAuthService.requireAdmin(roleHeader);
         String remark = request == null ? null : request.getRemark();
         return ApiResponse.success(creditService.approve(recordId, remark));
     }
@@ -59,18 +64,26 @@ public class CreditController {
     @PostMapping("/{recordId}/reject")
     public ApiResponse<CreditRecord> reject(
             @PathVariable Long recordId,
+            @RequestHeader(value = "X-Role", required = false) String roleHeader,
             @Valid @RequestBody(required = false) CreditReviewRequest request) {
+        roleAuthService.requireAdmin(roleHeader);
         String remark = request == null ? null : request.getRemark();
         return ApiResponse.success(creditService.reject(recordId, remark));
     }
 
     @PostMapping("/batch/approve")
-    public ApiResponse<CreditBatchReviewResult> batchApprove(@Valid @RequestBody CreditBatchReviewRequest request) {
+    public ApiResponse<CreditBatchReviewResult> batchApprove(
+            @RequestHeader(value = "X-Role", required = false) String roleHeader,
+            @Valid @RequestBody CreditBatchReviewRequest request) {
+        roleAuthService.requireAdmin(roleHeader);
         return ApiResponse.success(creditService.batchApprove(request.getRecordIds(), request.getRemark()));
     }
 
     @PostMapping("/batch/reject")
-    public ApiResponse<CreditBatchReviewResult> batchReject(@Valid @RequestBody CreditBatchReviewRequest request) {
+    public ApiResponse<CreditBatchReviewResult> batchReject(
+            @RequestHeader(value = "X-Role", required = false) String roleHeader,
+            @Valid @RequestBody CreditBatchReviewRequest request) {
+        roleAuthService.requireAdmin(roleHeader);
         return ApiResponse.success(creditService.batchReject(request.getRecordIds(), request.getRemark()));
     }
 
@@ -95,8 +108,10 @@ public class CreditController {
 
     @GetMapping("/pending/page")
     public ApiResponse<PageResult<CreditRecord>> listPendingRecordsPage(
+            @RequestHeader(value = "X-Role", required = false) String roleHeader,
             @RequestParam(defaultValue = "0") @Min(value = 0, message = "page 不能小于 0") int page,
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "size 不能小于 1") @Max(value = 100, message = "size 不能大于 100") int size) {
+        roleAuthService.requireAdmin(roleHeader);
         return ApiResponse.success(creditService.listPendingRecordsPage(page, size));
     }
 
@@ -128,14 +143,18 @@ public class CreditController {
     }
 
     @GetMapping("/analytics/export/categories")
-    public ResponseEntity<byte[]> exportCategoryStatisticsCsv() {
+    public ResponseEntity<byte[]> exportCategoryStatisticsCsv(
+            @RequestHeader(value = "X-Role", required = false) String roleHeader) {
+        roleAuthService.requireAdmin(roleHeader);
         String csv = creditReportService.exportCategoryStatisticsCsv();
         return buildCsvResponse(csv, "category_statistics.csv");
     }
 
     @GetMapping("/analytics/export/ranking")
     public ResponseEntity<byte[]> exportRankingCsv(
+            @RequestHeader(value = "X-Role", required = false) String roleHeader,
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "topN 不能小于 1") @Max(value = 100, message = "topN 不能大于 100") int topN) {
+        roleAuthService.requireAdmin(roleHeader);
         String csv = creditReportService.exportStudentRankingCsv(topN);
         return buildCsvResponse(csv, "student_ranking.csv");
     }

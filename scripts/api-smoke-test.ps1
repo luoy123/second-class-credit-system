@@ -1,4 +1,5 @@
 $baseUrl = "http://127.0.0.1:8080"
+$adminHeaders = @{ "X-Role" = "ADMIN" }
 
 $studentBody = @{
     studentNo = "20260001"
@@ -31,13 +32,13 @@ $applyBody = @{
 $applyResp = Invoke-RestMethod -Method Post -Uri "$baseUrl/api/credits/apply" -ContentType "application/json" -Body $applyBody
 $recordId = $applyResp.data.id
 $pendingPageResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/students/$studentId/records/page?page=0&size=10&status=PENDING"
-$pendingAdminPageResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/pending/page?page=0&size=10"
+$pendingAdminPageResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/pending/page?page=0&size=10" -Headers $adminHeaders
 
 $approveBody = @{
     remark = "联调脚本自动审核通过"
 } | ConvertTo-Json
 
-$approveResp = Invoke-RestMethod -Method Post -Uri "$baseUrl/api/credits/$recordId/approve" -ContentType "application/json" -Body $approveBody
+$approveResp = Invoke-RestMethod -Method Post -Uri "$baseUrl/api/credits/$recordId/approve" -Headers $adminHeaders -ContentType "application/json" -Body $approveBody
 $approvedPageResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/students/$studentId/records/page?page=0&size=10&status=APPROVED"
 $summaryResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/students/$studentId/summary"
 $categoryStatsResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytics/categories"
@@ -48,8 +49,8 @@ $rankingResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytic
 
 $categoryCsvPath = "category_statistics.csv"
 $rankingCsvPath = "student_ranking.csv"
-Invoke-WebRequest -Method Get -Uri "$baseUrl/api/credits/analytics/export/categories" -OutFile $categoryCsvPath
-Invoke-WebRequest -Method Get -Uri "$baseUrl/api/credits/analytics/export/ranking?topN=10" -OutFile $rankingCsvPath
+Invoke-WebRequest -Method Get -Uri "$baseUrl/api/credits/analytics/export/categories" -Headers $adminHeaders -OutFile $categoryCsvPath
+Invoke-WebRequest -Method Get -Uri "$baseUrl/api/credits/analytics/export/ranking?topN=10" -Headers $adminHeaders -OutFile $rankingCsvPath
 
 Write-Host "Apply Result:"
 $applyResp | ConvertTo-Json -Depth 8

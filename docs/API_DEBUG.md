@@ -7,6 +7,7 @@
   - `sql/init_schema.sql`
   - `sql/init_seed_data.sql`
 - 服务已启动：`mvn spring-boot:run`
+- 管理员接口需携带请求头：`X-Role: ADMIN`
 
 ## 推荐联调顺序
 
@@ -48,6 +49,7 @@ curl -X POST "http://127.0.0.1:8080/api/credits/apply" \
 ```bash
 curl -X POST "http://127.0.0.1:8080/api/credits/1/approve" \
   -H "Content-Type: application/json" \
+  -H "X-Role: ADMIN" \
   -d "{\"remark\":\"审核通过\"}"
 ```
 
@@ -56,6 +58,7 @@ curl -X POST "http://127.0.0.1:8080/api/credits/1/approve" \
 ```bash
 curl -X POST "http://127.0.0.1:8080/api/credits/2/reject" \
   -H "Content-Type: application/json" \
+  -H "X-Role: ADMIN" \
   -d "{\"remark\":\"材料不完整\"}"
 ```
 
@@ -64,6 +67,7 @@ curl -X POST "http://127.0.0.1:8080/api/credits/2/reject" \
 ```bash
 curl -X POST "http://127.0.0.1:8080/api/credits/batch/approve" \
   -H "Content-Type: application/json" \
+  -H "X-Role: ADMIN" \
   -d "{\"recordIds\":[1,2,3],\"remark\":\"批量审核通过\"}"
 ```
 
@@ -72,6 +76,7 @@ curl -X POST "http://127.0.0.1:8080/api/credits/batch/approve" \
 ```bash
 curl -X POST "http://127.0.0.1:8080/api/credits/batch/reject" \
   -H "Content-Type: application/json" \
+  -H "X-Role: ADMIN" \
   -d "{\"recordIds\":[4,5],\"remark\":\"材料不齐\"}"
 ```
 
@@ -90,7 +95,7 @@ curl "http://127.0.0.1:8080/api/credits/students/1/records/page?page=0&size=10&s
 ### 10) 分页查询待审核记录
 
 ```bash
-curl "http://127.0.0.1:8080/api/credits/pending/page?page=0&size=10"
+curl -H "X-Role: ADMIN" "http://127.0.0.1:8080/api/credits/pending/page?page=0&size=10"
 ```
 
 ### 11) 查询分类统计
@@ -126,13 +131,13 @@ curl "http://127.0.0.1:8080/api/credits/analytics/ranking?topN=10"
 ### 16) 导出分类统计 CSV
 
 ```bash
-curl -L "http://127.0.0.1:8080/api/credits/analytics/export/categories" -o "category_statistics.csv"
+curl -L -H "X-Role: ADMIN" "http://127.0.0.1:8080/api/credits/analytics/export/categories" -o "category_statistics.csv"
 ```
 
 ### 17) 导出排名统计 CSV
 
 ```bash
-curl -L "http://127.0.0.1:8080/api/credits/analytics/export/ranking?topN=10" -o "student_ranking.csv"
+curl -L -H "X-Role: ADMIN" "http://127.0.0.1:8080/api/credits/analytics/export/ranking?topN=10" -o "student_ranking.csv"
 ```
 
 ## PowerShell 一键联调

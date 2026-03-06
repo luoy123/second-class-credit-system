@@ -38,6 +38,8 @@ powershell -ExecutionPolicy Bypass -File "./scripts/api-smoke-test.ps1"
 
 ## API 示例
 
+- 管理员接口需携带请求头：`X-Role: ADMIN`
+
 - `POST /api/students`：创建学生
 - `GET /api/students/{id}`：查询学生
 - `POST /api/activities`：创建活动
