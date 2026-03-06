@@ -20,6 +20,7 @@ import org.springframework.data.domain.PageRequest;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -385,5 +386,52 @@ class CreditServiceTest {
         assertEquals(1, result.getTotalElements());
         assertEquals(1, result.getContent().size());
         assertEquals(CreditStatus.PENDING, result.getContent().get(0).getStatus());
+    }
+
+    @Test
+    void batchApproveShouldReturnFailedIdsWhenSomeRecordsAreInvalid() {
+        CreditRecord pendingRecord = new CreditRecord();
+        pendingRecord.setId(1L);
+        pendingRecord.setStatus(CreditStatus.PENDING);
+
+        CreditRecord approvedRecord = new CreditRecord();
+        approvedRecord.setId(2L);
+        approvedRecord.setStatus(CreditStatus.APPROVED);
+
+        when(creditRecordRepository.findById(1L)).thenReturn(Optional.of(pendingRecord));
+        when(creditRecordRepository.findById(2L)).thenReturn(Optional.of(approvedRecord));
+        when(creditRecordRepository.findById(3L)).thenReturn(Optional.empty());
+        when(creditRecordRepository.save(any(CreditRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var result = creditService.batchApprove(Arrays.asList(1L, 2L, 3L, 1L, null), "批量通过");
+
+        assertEquals(3, result.getTotal());
+        assertEquals(1, result.getSuccess());
+        assertEquals(2, result.getFailedIds().size());
+        assertEquals(CreditStatus.APPROVED, pendingRecord.getStatus());
+        assertEquals("批量通过", pendingRecord.getRemark());
+    }
+
+    @Test
+    void batchRejectShouldUpdateAllPendingRecords() {
+        CreditRecord pendingRecord1 = new CreditRecord();
+        pendingRecord1.setId(11L);
+        pendingRecord1.setStatus(CreditStatus.PENDING);
+
+        CreditRecord pendingRecord2 = new CreditRecord();
+        pendingRecord2.setId(12L);
+        pendingRecord2.setStatus(CreditStatus.PENDING);
+
+        when(creditRecordRepository.findById(11L)).thenReturn(Optional.of(pendingRecord1));
+        when(creditRecordRepository.findById(12L)).thenReturn(Optional.of(pendingRecord2));
+        when(creditRecordRepository.save(any(CreditRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var result = creditService.batchReject(List.of(11L, 12L), "批量驳回");
+
+        assertEquals(2, result.getTotal());
+        assertEquals(2, result.getSuccess());
+        assertEquals(0, result.getFailedIds().size());
+        assertEquals(CreditStatus.REJECTED, pendingRecord1.getStatus());
+        assertEquals(CreditStatus.REJECTED, pendingRecord2.getStatus());
     }
 }

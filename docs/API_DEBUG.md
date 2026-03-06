@@ -59,61 +59,77 @@ curl -X POST "http://127.0.0.1:8080/api/credits/2/reject" \
   -d "{\"remark\":\"材料不完整\"}"
 ```
 
-### 6) 查询学分汇总
+### 6) 批量审核通过
+
+```bash
+curl -X POST "http://127.0.0.1:8080/api/credits/batch/approve" \
+  -H "Content-Type: application/json" \
+  -d "{\"recordIds\":[1,2,3],\"remark\":\"批量审核通过\"}"
+```
+
+### 7) 批量驳回
+
+```bash
+curl -X POST "http://127.0.0.1:8080/api/credits/batch/reject" \
+  -H "Content-Type: application/json" \
+  -d "{\"recordIds\":[4,5],\"remark\":\"材料不齐\"}"
+```
+
+### 8) 查询学分汇总
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/students/1/summary"
 ```
 
-### 7) 分页查询学分记录（支持状态筛选）
+### 9) 分页查询学分记录（支持状态筛选）
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/students/1/records/page?page=0&size=10&status=PENDING"
 ```
 
-### 8) 分页查询待审核记录
+### 10) 分页查询待审核记录
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/pending/page?page=0&size=10"
 ```
 
-### 9) 查询分类统计
+### 11) 查询分类统计
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/categories"
 ```
 
-### 10) 查询专业统计
+### 12) 查询专业统计
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/majors"
 ```
 
-### 11) 查询年级统计
+### 13) 查询年级统计
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/grades"
 ```
 
-### 12) 查询年度按月统计
+### 14) 查询年度按月统计
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/monthly?year=2026"
 ```
 
-### 13) 查询学分排名
+### 15) 查询学分排名
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/ranking?topN=10"
 ```
 
-### 14) 导出分类统计 CSV
+### 16) 导出分类统计 CSV
 
 ```bash
 curl -L "http://127.0.0.1:8080/api/credits/analytics/export/categories" -o "category_statistics.csv"
 ```
 
-### 15) 导出排名统计 CSV
+### 17) 导出排名统计 CSV
 
 ```bash
 curl -L "http://127.0.0.1:8080/api/credits/analytics/export/ranking?topN=10" -o "student_ranking.csv"

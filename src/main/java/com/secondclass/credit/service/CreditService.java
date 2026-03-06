@@ -1,6 +1,7 @@
 package com.secondclass.credit.service;
 
 import com.secondclass.credit.domain.dto.CategoryCreditStatResponse;
+import com.secondclass.credit.domain.dto.CreditBatchReviewResult;
 import com.secondclass.credit.domain.dto.CreditApplyRequest;
 import com.secondclass.credit.domain.dto.DimensionCreditStatResponse;
 import com.secondclass.credit.domain.dto.MonthlyCreditStatResponse;
@@ -27,6 +28,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -62,6 +64,14 @@ public class CreditService {
 
     public CreditRecord reject(Long recordId, String reviewRemark) {
         return updateRecordStatus(recordId, CreditStatus.REJECTED, reviewRemark);
+    }
+
+    public CreditBatchReviewResult batchApprove(List<Long> recordIds, String reviewRemark) {
+        return batchUpdateStatus(recordIds, CreditStatus.APPROVED, reviewRemark);
+    }
+
+    public CreditBatchReviewResult batchReject(List<Long> recordIds, String reviewRemark) {
+        return batchUpdateStatus(recordIds, CreditStatus.REJECTED, reviewRemark);
     }
 
     public CreditSummaryResponse getStudentSummary(Long studentId) {
@@ -264,6 +274,36 @@ public class CreditService {
                 .totalElements(recordPage.getTotalElements())
                 .totalPages(recordPage.getTotalPages())
                 .content(recordPage.getContent())
+                .build();
+    }
+
+    private CreditBatchReviewResult batchUpdateStatus(List<Long> recordIds, CreditStatus targetStatus, String reviewRemark) {
+        List<Long> normalizedIds = recordIds.stream()
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        int success = 0;
+        List<Long> failedIds = new ArrayList<>();
+
+        for (Long recordId : normalizedIds) {
+            CreditRecord creditRecord = creditRecordRepository.findById(recordId).orElse(null);
+            if (creditRecord == null || creditRecord.getStatus() != CreditStatus.PENDING) {
+                failedIds.add(recordId);
+                continue;
+            }
+            creditRecord.setStatus(targetStatus);
+            if (reviewRemark != null && !reviewRemark.isBlank()) {
+                creditRecord.setRemark(reviewRemark);
+            }
+            creditRecordRepository.save(creditRecord);
+            success++;
+        }
+
+        return CreditBatchReviewResult.builder()
+                .total(normalizedIds.size())
+                .success(success)
+                .failedIds(failedIds)
                 .build();
     }
 }

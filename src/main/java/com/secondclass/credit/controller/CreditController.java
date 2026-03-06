@@ -2,6 +2,8 @@ package com.secondclass.credit.controller;
 
 import com.secondclass.credit.common.ApiResponse;
 import com.secondclass.credit.domain.dto.CategoryCreditStatResponse;
+import com.secondclass.credit.domain.dto.CreditBatchReviewRequest;
+import com.secondclass.credit.domain.dto.CreditBatchReviewResult;
 import com.secondclass.credit.domain.dto.CreditApplyRequest;
 import com.secondclass.credit.domain.dto.CreditReviewRequest;
 import com.secondclass.credit.domain.dto.CreditSummaryResponse;
@@ -60,6 +62,16 @@ public class CreditController {
             @Valid @RequestBody(required = false) CreditReviewRequest request) {
         String remark = request == null ? null : request.getRemark();
         return ApiResponse.success(creditService.reject(recordId, remark));
+    }
+
+    @PostMapping("/batch/approve")
+    public ApiResponse<CreditBatchReviewResult> batchApprove(@Valid @RequestBody CreditBatchReviewRequest request) {
+        return ApiResponse.success(creditService.batchApprove(request.getRecordIds(), request.getRemark()));
+    }
+
+    @PostMapping("/batch/reject")
+    public ApiResponse<CreditBatchReviewResult> batchReject(@Valid @RequestBody CreditBatchReviewRequest request) {
+        return ApiResponse.success(creditService.batchReject(request.getRecordIds(), request.getRemark()));
     }
 
     @GetMapping("/students/{studentId}/summary")
