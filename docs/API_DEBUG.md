@@ -95,6 +95,18 @@ curl "http://127.0.0.1:8080/api/credits/analytics/monthly?year=2026"
 curl "http://127.0.0.1:8080/api/credits/analytics/ranking?topN=10"
 ```
 
+### 12) 导出分类统计 CSV
+
+```bash
+curl -L "http://127.0.0.1:8080/api/credits/analytics/export/categories" -o "category_statistics.csv"
+```
+
+### 13) 导出排名统计 CSV
+
+```bash
+curl -L "http://127.0.0.1:8080/api/credits/analytics/export/ranking?topN=10" -o "student_ranking.csv"
+```
+
 ## PowerShell 一键联调
 
 - 脚本路径：`scripts/api-smoke-test.ps1`

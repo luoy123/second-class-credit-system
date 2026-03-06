@@ -43,6 +43,11 @@ $gradeStatsResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analy
 $monthlyStatsResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytics/monthly?year=2026"
 $rankingResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytics/ranking?topN=10"
 
+$categoryCsvPath = "category_statistics.csv"
+$rankingCsvPath = "student_ranking.csv"
+Invoke-WebRequest -Method Get -Uri "$baseUrl/api/credits/analytics/export/categories" -OutFile $categoryCsvPath
+Invoke-WebRequest -Method Get -Uri "$baseUrl/api/credits/analytics/export/ranking?topN=10" -OutFile $rankingCsvPath
+
 Write-Host "Apply Result:"
 $applyResp | ConvertTo-Json -Depth 8
 
@@ -66,3 +71,7 @@ $monthlyStatsResp | ConvertTo-Json -Depth 8
 
 Write-Host "`nRanking Result:"
 $rankingResp | ConvertTo-Json -Depth 8
+
+Write-Host "`nCSV Export Files:"
+Write-Host $categoryCsvPath
+Write-Host $rankingCsvPath

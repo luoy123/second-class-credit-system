@@ -9,11 +9,15 @@ import com.secondclass.credit.domain.dto.DimensionCreditStatResponse;
 import com.secondclass.credit.domain.dto.MonthlyCreditStatResponse;
 import com.secondclass.credit.domain.dto.StudentCreditRankingResponse;
 import com.secondclass.credit.domain.entity.CreditRecord;
+import com.secondclass.credit.service.CreditReportService;
 import com.secondclass.credit.service.CreditService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.nio.charset.StandardCharsets;
 
 @Validated
 @RestController
@@ -32,6 +37,7 @@ import java.util.List;
 public class CreditController {
 
     private final CreditService creditService;
+    private final CreditReportService creditReportService;
 
     @PostMapping("/apply")
     public ApiResponse<CreditRecord> apply(@Valid @RequestBody CreditApplyRequest request) {
@@ -89,5 +95,26 @@ public class CreditController {
     public ApiResponse<List<StudentCreditRankingResponse>> getStudentRanking(
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "topN 不能小于 1") @Max(value = 100, message = "topN 不能大于 100") int topN) {
         return ApiResponse.success(creditService.getStudentRanking(topN));
+    }
+
+    @GetMapping("/analytics/export/categories")
+    public ResponseEntity<byte[]> exportCategoryStatisticsCsv() {
+        String csv = creditReportService.exportCategoryStatisticsCsv();
+        return buildCsvResponse(csv, "category_statistics.csv");
+    }
+
+    @GetMapping("/analytics/export/ranking")
+    public ResponseEntity<byte[]> exportRankingCsv(
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "topN 不能小于 1") @Max(value = 100, message = "topN 不能大于 100") int topN) {
+        String csv = creditReportService.exportStudentRankingCsv(topN);
+        return buildCsvResponse(csv, "student_ranking.csv");
+    }
+
+    private ResponseEntity<byte[]> buildCsvResponse(String csvContent, String fileName) {
+        byte[] content = csvContent.getBytes(StandardCharsets.UTF_8);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .contentType(MediaType.parseMediaType("text/csv;charset=UTF-8"))
+                .body(content);
     }
 }
