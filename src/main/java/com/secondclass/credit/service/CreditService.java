@@ -2,6 +2,7 @@ package com.secondclass.credit.service;
 
 import com.secondclass.credit.domain.dto.CategoryCreditStatResponse;
 import com.secondclass.credit.domain.dto.CreditApplyRequest;
+import com.secondclass.credit.domain.dto.DimensionCreditStatResponse;
 import com.secondclass.credit.domain.dto.MonthlyCreditStatResponse;
 import com.secondclass.credit.domain.dto.StudentCreditRankingResponse;
 import com.secondclass.credit.domain.dto.CreditSummaryResponse;
@@ -111,6 +112,14 @@ public class CreditService {
                 .toList();
     }
 
+    public List<DimensionCreditStatResponse> getMajorStatistics() {
+        return getDimensionStatistics(Student::getMajor);
+    }
+
+    public List<DimensionCreditStatResponse> getGradeStatistics() {
+        return getDimensionStatistics(Student::getGrade);
+    }
+
     public List<MonthlyCreditStatResponse> getMonthlyStatistics(int year) {
         List<CreditRecord> approvedRecords = creditRecordRepository.findByStatus(CreditStatus.APPROVED);
         Map<Integer, BigDecimal> monthCreditMap = approvedRecords.stream()
@@ -186,5 +195,33 @@ public class CreditService {
             creditRecord.setRemark(reviewRemark);
         }
         return creditRecordRepository.save(creditRecord);
+    }
+
+    private List<DimensionCreditStatResponse> getDimensionStatistics(Function<Student, String> dimensionResolver) {
+        List<CreditRecord> approvedRecords = creditRecordRepository.findByStatus(CreditStatus.APPROVED);
+        Map<Long, Student> studentMap = studentService.list().stream()
+                .collect(Collectors.toMap(Student::getId, Function.identity()));
+
+        Map<String, BigDecimal> dimensionCreditMap = approvedRecords.stream()
+                .filter(record -> studentMap.containsKey(record.getStudentId()))
+                .collect(Collectors.groupingBy(
+                        record -> normalizeDimension(dimensionResolver.apply(studentMap.get(record.getStudentId()))),
+                        Collectors.reducing(BigDecimal.ZERO, CreditRecord::getCredit, BigDecimal::add)
+                ));
+
+        return dimensionCreditMap.entrySet().stream()
+                .map(entry -> DimensionCreditStatResponse.builder()
+                        .dimension(entry.getKey())
+                        .totalCredit(entry.getValue())
+                        .build())
+                .sorted(Comparator.comparing(DimensionCreditStatResponse::getDimension))
+                .toList();
+    }
+
+    private String normalizeDimension(String value) {
+        if (value == null || value.isBlank()) {
+            return "未设置";
+        }
+        return value;
     }
 }

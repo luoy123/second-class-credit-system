@@ -5,6 +5,7 @@ import com.secondclass.credit.domain.dto.CategoryCreditStatResponse;
 import com.secondclass.credit.domain.dto.CreditApplyRequest;
 import com.secondclass.credit.domain.dto.CreditReviewRequest;
 import com.secondclass.credit.domain.dto.CreditSummaryResponse;
+import com.secondclass.credit.domain.dto.DimensionCreditStatResponse;
 import com.secondclass.credit.domain.dto.MonthlyCreditStatResponse;
 import com.secondclass.credit.domain.dto.StudentCreditRankingResponse;
 import com.secondclass.credit.domain.entity.CreditRecord;
@@ -66,6 +67,16 @@ public class CreditController {
     @GetMapping("/analytics/categories")
     public ApiResponse<List<CategoryCreditStatResponse>> getCategoryStatistics() {
         return ApiResponse.success(creditService.getCategoryStatistics());
+    }
+
+    @GetMapping("/analytics/majors")
+    public ApiResponse<List<DimensionCreditStatResponse>> getMajorStatistics() {
+        return ApiResponse.success(creditService.getMajorStatistics());
+    }
+
+    @GetMapping("/analytics/grades")
+    public ApiResponse<List<DimensionCreditStatResponse>> getGradeStatistics() {
+        return ApiResponse.success(creditService.getGradeStatistics());
     }
 
     @GetMapping("/analytics/monthly")

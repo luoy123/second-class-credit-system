@@ -207,6 +207,74 @@ class CreditServiceTest {
     }
 
     @Test
+    void getMajorStatisticsShouldAggregateByStudentMajor() {
+        Student s1 = new Student();
+        s1.setId(1L);
+        s1.setMajor("软件工程");
+
+        Student s2 = new Student();
+        s2.setId(2L);
+        s2.setMajor(null);
+
+        CreditRecord r1 = new CreditRecord();
+        r1.setStudentId(1L);
+        r1.setCredit(new BigDecimal("1.00"));
+
+        CreditRecord r2 = new CreditRecord();
+        r2.setStudentId(1L);
+        r2.setCredit(new BigDecimal("0.50"));
+
+        CreditRecord r3 = new CreditRecord();
+        r3.setStudentId(2L);
+        r3.setCredit(new BigDecimal("2.00"));
+
+        when(creditRecordRepository.findByStatus(CreditStatus.APPROVED)).thenReturn(List.of(r1, r2, r3));
+        when(studentService.list()).thenReturn(List.of(s1, s2));
+
+        var result = creditService.getMajorStatistics();
+
+        assertEquals(2, result.size());
+        assertEquals("未设置", result.get(0).getDimension());
+        assertEquals(0, new BigDecimal("2.00").compareTo(result.get(0).getTotalCredit()));
+        assertEquals("软件工程", result.get(1).getDimension());
+        assertEquals(0, new BigDecimal("1.50").compareTo(result.get(1).getTotalCredit()));
+    }
+
+    @Test
+    void getGradeStatisticsShouldAggregateByStudentGrade() {
+        Student s1 = new Student();
+        s1.setId(1L);
+        s1.setGrade("2025");
+
+        Student s2 = new Student();
+        s2.setId(2L);
+        s2.setGrade("2026");
+
+        CreditRecord r1 = new CreditRecord();
+        r1.setStudentId(1L);
+        r1.setCredit(new BigDecimal("1.00"));
+
+        CreditRecord r2 = new CreditRecord();
+        r2.setStudentId(2L);
+        r2.setCredit(new BigDecimal("2.00"));
+
+        CreditRecord r3 = new CreditRecord();
+        r3.setStudentId(2L);
+        r3.setCredit(new BigDecimal("0.50"));
+
+        when(creditRecordRepository.findByStatus(CreditStatus.APPROVED)).thenReturn(List.of(r1, r2, r3));
+        when(studentService.list()).thenReturn(List.of(s1, s2));
+
+        var result = creditService.getGradeStatistics();
+
+        assertEquals(2, result.size());
+        assertEquals("2025", result.get(0).getDimension());
+        assertEquals(0, new BigDecimal("1.00").compareTo(result.get(0).getTotalCredit()));
+        assertEquals("2026", result.get(1).getDimension());
+        assertEquals(0, new BigDecimal("2.50").compareTo(result.get(1).getTotalCredit()));
+    }
+
+    @Test
     void getMonthlyStatisticsShouldReturnTwelveMonthsAndAggregateCurrentYear() {
         CreditRecord january = new CreditRecord();
         january.setCredit(new BigDecimal("1.00"));

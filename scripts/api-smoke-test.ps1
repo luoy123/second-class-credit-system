@@ -38,6 +38,8 @@ $approveBody = @{
 $approveResp = Invoke-RestMethod -Method Post -Uri "$baseUrl/api/credits/$recordId/approve" -ContentType "application/json" -Body $approveBody
 $summaryResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/students/$studentId/summary"
 $categoryStatsResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytics/categories"
+$majorStatsResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytics/majors"
+$gradeStatsResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytics/grades"
 $monthlyStatsResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytics/monthly?year=2026"
 $rankingResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytics/ranking?topN=10"
 
@@ -52,6 +54,12 @@ $summaryResp | ConvertTo-Json -Depth 8
 
 Write-Host "`nCategory Stats Result:"
 $categoryStatsResp | ConvertTo-Json -Depth 8
+
+Write-Host "`nMajor Stats Result:"
+$majorStatsResp | ConvertTo-Json -Depth 8
+
+Write-Host "`nGrade Stats Result:"
+$gradeStatsResp | ConvertTo-Json -Depth 8
 
 Write-Host "`nMonthly Stats Result:"
 $monthlyStatsResp | ConvertTo-Json -Depth 8

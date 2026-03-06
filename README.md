@@ -10,6 +10,7 @@
 - 第二课堂活动管理（新增、查询）
 - 学分申请、审核与记录管理
 - 学生学分汇总统计（总学分 + 分类汇总）
+- 多维统计分析（分类、专业、年级、月份、排名）
 
 ## 本地启动
 
@@ -44,6 +45,8 @@ powershell -ExecutionPolicy Bypass -File "./scripts/api-smoke-test.ps1"
 - `POST /api/credits/{recordId}/reject`：驳回学分申请
 - `GET /api/credits/students/{studentId}/summary`：查询学分汇总
 - `GET /api/credits/analytics/categories`：查询分类学分统计
+- `GET /api/credits/analytics/majors`：查询专业学分统计
+- `GET /api/credits/analytics/grades`：查询年级学分统计
 - `GET /api/credits/analytics/monthly?year=2026`：查询年度按月学分统计
 - `GET /api/credits/analytics/ranking?topN=10`：查询学生学分排名
 

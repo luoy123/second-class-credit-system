@@ -71,13 +71,25 @@ curl "http://127.0.0.1:8080/api/credits/students/1/summary"
 curl "http://127.0.0.1:8080/api/credits/analytics/categories"
 ```
 
-### 8) 查询年度按月统计
+### 8) 查询专业统计
+
+```bash
+curl "http://127.0.0.1:8080/api/credits/analytics/majors"
+```
+
+### 9) 查询年级统计
+
+```bash
+curl "http://127.0.0.1:8080/api/credits/analytics/grades"
+```
+
+### 10) 查询年度按月统计
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/monthly?year=2026"
 ```
 
-### 9) 查询学分排名
+### 11) 查询学分排名
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/ranking?topN=10"
