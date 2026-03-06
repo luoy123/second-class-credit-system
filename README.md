@@ -8,7 +8,7 @@
 
 - 学生信息管理（新增、查询）
 - 第二课堂活动管理（新增、查询）
-- 学分申请与记录管理
+- 学分申请、审核与记录管理
 - 学生学分汇总统计（总学分 + 分类汇总）
 
 ## 本地启动
@@ -40,6 +40,8 @@ powershell -ExecutionPolicy Bypass -File "./scripts/api-smoke-test.ps1"
 - `GET /api/students/{id}`：查询学生
 - `POST /api/activities`：创建活动
 - `POST /api/credits/apply`：提交学分申请
+- `POST /api/credits/{recordId}/approve`：审核通过学分申请
+- `POST /api/credits/{recordId}/reject`：驳回学分申请
 - `GET /api/credits/students/{studentId}/summary`：查询学分汇总
 - `GET /api/credits/analytics/categories`：查询分类学分统计
 - `GET /api/credits/analytics/monthly?year=2026`：查询年度按月学分统计

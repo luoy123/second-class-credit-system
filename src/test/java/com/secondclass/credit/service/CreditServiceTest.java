@@ -47,7 +47,7 @@ class CreditServiceTest {
     private CreditService creditService;
 
     @Test
-    void applyShouldUseMinCreditAndSaveApprovedRecord() {
+    void applyShouldUseMinCreditAndSavePendingRecord() {
         CreditApplyRequest request = new CreditApplyRequest();
         request.setStudentId(1L);
         request.setActivityId(2L);
@@ -77,7 +77,7 @@ class CreditServiceTest {
 
         assertEquals(1L, saved.getStudentId());
         assertEquals(2L, saved.getActivityId());
-        assertEquals(CreditStatus.APPROVED, saved.getStatus());
+        assertEquals(CreditStatus.PENDING, saved.getStatus());
         assertEquals(0, new BigDecimal("1.50").compareTo(saved.getCredit()));
         verify(creditRecordRepository).save(any(CreditRecord.class));
     }
@@ -94,6 +94,49 @@ class CreditServiceTest {
         when(creditRuleRepository.findFirstByCategoryAndEnabledTrue("不存在的分类")).thenReturn(Optional.empty());
 
         assertThrows(BusinessException.class, () -> creditService.apply(request));
+        verify(creditRecordRepository, never()).save(any(CreditRecord.class));
+    }
+
+    @Test
+    void approveShouldUpdatePendingRecordToApproved() {
+        CreditRecord record = new CreditRecord();
+        record.setId(10L);
+        record.setStatus(CreditStatus.PENDING);
+        record.setRemark("old");
+
+        when(creditRecordRepository.findById(10L)).thenReturn(Optional.of(record));
+        when(creditRecordRepository.save(any(CreditRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        CreditRecord result = creditService.approve(10L, "通过");
+
+        assertEquals(CreditStatus.APPROVED, result.getStatus());
+        assertEquals("通过", result.getRemark());
+    }
+
+    @Test
+    void rejectShouldUpdatePendingRecordToRejected() {
+        CreditRecord record = new CreditRecord();
+        record.setId(11L);
+        record.setStatus(CreditStatus.PENDING);
+
+        when(creditRecordRepository.findById(11L)).thenReturn(Optional.of(record));
+        when(creditRecordRepository.save(any(CreditRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        CreditRecord result = creditService.reject(11L, "材料不足");
+
+        assertEquals(CreditStatus.REJECTED, result.getStatus());
+        assertEquals("材料不足", result.getRemark());
+    }
+
+    @Test
+    void approveShouldThrowWhenRecordIsNotPending() {
+        CreditRecord record = new CreditRecord();
+        record.setId(12L);
+        record.setStatus(CreditStatus.APPROVED);
+
+        when(creditRecordRepository.findById(12L)).thenReturn(Optional.of(record));
+
+        assertThrows(BusinessException.class, () -> creditService.approve(12L, "重复审核"));
         verify(creditRecordRepository, never()).save(any(CreditRecord.class));
     }
 

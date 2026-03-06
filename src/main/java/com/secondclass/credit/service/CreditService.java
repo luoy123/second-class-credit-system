@@ -46,9 +46,17 @@ public class CreditService {
         creditRecord.setActivityId(request.getActivityId());
         creditRecord.setCategory(request.getCategory());
         creditRecord.setCredit(resolveCredit(creditRule, activity));
-        creditRecord.setStatus(CreditStatus.APPROVED);
+        creditRecord.setStatus(CreditStatus.PENDING);
         creditRecord.setRemark(request.getRemark());
         return creditRecordRepository.save(creditRecord);
+    }
+
+    public CreditRecord approve(Long recordId, String reviewRemark) {
+        return updateRecordStatus(recordId, CreditStatus.APPROVED, reviewRemark);
+    }
+
+    public CreditRecord reject(Long recordId, String reviewRemark) {
+        return updateRecordStatus(recordId, CreditStatus.REJECTED, reviewRemark);
     }
 
     public CreditSummaryResponse getStudentSummary(Long studentId) {
@@ -165,5 +173,18 @@ public class CreditService {
             throw new BusinessException("学分规则或活动学分配置异常");
         }
         return ruleCredit.min(activityMaxCredit);
+    }
+
+    private CreditRecord updateRecordStatus(Long recordId, CreditStatus targetStatus, String reviewRemark) {
+        CreditRecord creditRecord = creditRecordRepository.findById(recordId)
+                .orElseThrow(() -> new BusinessException("学分记录不存在，id=" + recordId));
+        if (creditRecord.getStatus() != CreditStatus.PENDING) {
+            throw new BusinessException("仅待审核记录可变更状态，当前状态=" + creditRecord.getStatus());
+        }
+        creditRecord.setStatus(targetStatus);
+        if (reviewRemark != null && !reviewRemark.isBlank()) {
+            creditRecord.setRemark(reviewRemark);
+        }
+        return creditRecordRepository.save(creditRecord);
     }
 }

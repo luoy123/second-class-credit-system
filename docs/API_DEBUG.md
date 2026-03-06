@@ -13,8 +13,9 @@
 1. 创建学生
 2. 创建活动
 3. 提交学分申请
-4. 查询学生学分汇总
-5. 查询统计分析接口
+4. 审核通过或驳回学分申请
+5. 查询学生学分汇总
+6. 查询统计分析接口
 
 ## Curl 示例
 
@@ -42,25 +43,41 @@ curl -X POST "http://127.0.0.1:8080/api/credits/apply" \
   -d "{\"studentId\":1,\"activityId\":1,\"category\":\"志愿服务\",\"remark\":\"接口联调\"}"
 ```
 
-### 4) 查询学分汇总
+### 4) 审核通过学分申请
+
+```bash
+curl -X POST "http://127.0.0.1:8080/api/credits/1/approve" \
+  -H "Content-Type: application/json" \
+  -d "{\"remark\":\"审核通过\"}"
+```
+
+### 5) 驳回学分申请
+
+```bash
+curl -X POST "http://127.0.0.1:8080/api/credits/2/reject" \
+  -H "Content-Type: application/json" \
+  -d "{\"remark\":\"材料不完整\"}"
+```
+
+### 6) 查询学分汇总
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/students/1/summary"
 ```
 
-### 5) 查询分类统计
+### 7) 查询分类统计
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/categories"
 ```
 
-### 6) 查询年度按月统计
+### 8) 查询年度按月统计
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/monthly?year=2026"
 ```
 
-### 7) 查询学分排名
+### 9) 查询学分排名
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/ranking?topN=10"

@@ -3,6 +3,7 @@ package com.secondclass.credit.controller;
 import com.secondclass.credit.common.ApiResponse;
 import com.secondclass.credit.domain.dto.CategoryCreditStatResponse;
 import com.secondclass.credit.domain.dto.CreditApplyRequest;
+import com.secondclass.credit.domain.dto.CreditReviewRequest;
 import com.secondclass.credit.domain.dto.CreditSummaryResponse;
 import com.secondclass.credit.domain.dto.MonthlyCreditStatResponse;
 import com.secondclass.credit.domain.dto.StudentCreditRankingResponse;
@@ -34,6 +35,22 @@ public class CreditController {
     @PostMapping("/apply")
     public ApiResponse<CreditRecord> apply(@Valid @RequestBody CreditApplyRequest request) {
         return ApiResponse.success(creditService.apply(request));
+    }
+
+    @PostMapping("/{recordId}/approve")
+    public ApiResponse<CreditRecord> approve(
+            @PathVariable Long recordId,
+            @Valid @RequestBody(required = false) CreditReviewRequest request) {
+        String remark = request == null ? null : request.getRemark();
+        return ApiResponse.success(creditService.approve(recordId, remark));
+    }
+
+    @PostMapping("/{recordId}/reject")
+    public ApiResponse<CreditRecord> reject(
+            @PathVariable Long recordId,
+            @Valid @RequestBody(required = false) CreditReviewRequest request) {
+        String remark = request == null ? null : request.getRemark();
+        return ApiResponse.success(creditService.reject(recordId, remark));
     }
 
     @GetMapping("/students/{studentId}/summary")

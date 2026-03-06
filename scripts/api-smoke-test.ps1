@@ -29,6 +29,13 @@ $applyBody = @{
 } | ConvertTo-Json
 
 $applyResp = Invoke-RestMethod -Method Post -Uri "$baseUrl/api/credits/apply" -ContentType "application/json" -Body $applyBody
+$recordId = $applyResp.data.id
+
+$approveBody = @{
+    remark = "联调脚本自动审核通过"
+} | ConvertTo-Json
+
+$approveResp = Invoke-RestMethod -Method Post -Uri "$baseUrl/api/credits/$recordId/approve" -ContentType "application/json" -Body $approveBody
 $summaryResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/students/$studentId/summary"
 $categoryStatsResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytics/categories"
 $monthlyStatsResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytics/monthly?year=2026"
@@ -36,6 +43,9 @@ $rankingResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytic
 
 Write-Host "Apply Result:"
 $applyResp | ConvertTo-Json -Depth 8
+
+Write-Host "`nApprove Result:"
+$approveResp | ConvertTo-Json -Depth 8
 
 Write-Host "`nSummary Result:"
 $summaryResp | ConvertTo-Json -Depth 8
