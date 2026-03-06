@@ -6,6 +6,7 @@ import com.secondclass.credit.domain.dto.CreditBatchReviewRequest;
 import com.secondclass.credit.domain.dto.CreditBatchReviewResult;
 import com.secondclass.credit.domain.dto.CreditApplyRequest;
 import com.secondclass.credit.domain.dto.CreditReviewRequest;
+import com.secondclass.credit.domain.dto.CreditReviewLogStatResponse;
 import com.secondclass.credit.domain.dto.CreditSummaryResponse;
 import com.secondclass.credit.domain.dto.DimensionCreditStatResponse;
 import com.secondclass.credit.domain.dto.MonthlyCreditStatResponse;
@@ -136,6 +137,18 @@ public class CreditController {
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "size 不能小于 1") @Max(value = 100, message = "size 不能大于 100") int size) {
         roleAuthService.requireAdmin(roleHeader);
         return ApiResponse.success(creditReviewLogService.listLogsPage(recordId, action, success, startDate, endDate, page, size));
+    }
+
+    @GetMapping("/review-logs/stats")
+    public ApiResponse<CreditReviewLogStatResponse> getReviewLogStats(
+            @RequestHeader(value = "X-Role", required = false) String roleHeader,
+            @RequestParam(required = false) Long recordId,
+            @RequestParam(required = false) CreditReviewAction action,
+            @RequestParam(required = false) Boolean success,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        roleAuthService.requireAdmin(roleHeader);
+        return ApiResponse.success(creditReviewLogService.getLogStats(recordId, action, success, startDate, endDate));
     }
 
     @GetMapping("/review-logs/export")

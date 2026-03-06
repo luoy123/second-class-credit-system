@@ -13,6 +13,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -102,5 +105,32 @@ class CreditReviewLogServiceTest {
     @Test
     void exportLogsCsvShouldThrowWhenLimitInvalid() {
         assertThrows(BusinessException.class, () -> creditReviewLogService.exportLogsCsv(null, null, null, null, null, 5001));
+    }
+
+    @Test
+    void getLogStatsShouldAggregateCountsAndRate() {
+        CreditReviewLog log1 = new CreditReviewLog();
+        log1.setAction(CreditReviewAction.APPROVE);
+        log1.setSuccess(true);
+
+        CreditReviewLog log2 = new CreditReviewLog();
+        log2.setAction(CreditReviewAction.REJECT);
+        log2.setSuccess(false);
+
+        CreditReviewLog log3 = new CreditReviewLog();
+        log3.setAction(CreditReviewAction.APPROVE);
+        log3.setSuccess(true);
+
+        when(creditReviewLogRepository.searchAll(eq(100L), eq(null), eq(null), eq(null), eq(null)))
+                .thenReturn(List.of(log1, log2, log3));
+
+        var result = creditReviewLogService.getLogStats(100L, null, null, null, null);
+
+        assertEquals(3, result.getTotalCount());
+        assertEquals(2, result.getSuccessCount());
+        assertEquals(1, result.getFailedCount());
+        assertEquals(2, result.getApproveCount());
+        assertEquals(1, result.getRejectCount());
+        assertEquals(0, new BigDecimal("66.67").compareTo(result.getSuccessRate()));
     }
 }

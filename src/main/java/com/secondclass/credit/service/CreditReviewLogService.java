@@ -1,6 +1,7 @@
 package com.secondclass.credit.service;
 
 import com.secondclass.credit.domain.dto.PageResult;
+import com.secondclass.credit.domain.dto.CreditReviewLogStatResponse;
 import com.secondclass.credit.domain.entity.CreditReviewLog;
 import com.secondclass.credit.domain.enums.CreditReviewAction;
 import com.secondclass.credit.exception.BusinessException;
@@ -11,9 +12,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -97,6 +101,43 @@ public class CreditReviewLogService {
                     .append('\n');
         }
         return builder.toString();
+    }
+
+    public CreditReviewLogStatResponse getLogStats(Long recordId,
+                                                   CreditReviewAction action,
+                                                   Boolean success,
+                                                   LocalDate startDate,
+                                                   LocalDate endDate) {
+        validateDateRange(startDate, endDate);
+        List<CreditReviewLog> logs = creditReviewLogRepository.searchAll(
+                recordId,
+                action,
+                success,
+                resolveStartTime(startDate),
+                resolveEndTime(endDate)
+        );
+
+        long totalCount = logs.size();
+        long successCount = logs.stream().filter(log -> Boolean.TRUE.equals(log.getSuccess())).count();
+        long failedCount = totalCount - successCount;
+        long approveCount = logs.stream().filter(log -> log.getAction() == CreditReviewAction.APPROVE).count();
+        long rejectCount = logs.stream().filter(log -> log.getAction() == CreditReviewAction.REJECT).count();
+
+        BigDecimal successRate = BigDecimal.ZERO;
+        if (totalCount > 0) {
+            successRate = BigDecimal.valueOf(successCount)
+                    .multiply(BigDecimal.valueOf(100))
+                    .divide(BigDecimal.valueOf(totalCount), 2, RoundingMode.HALF_UP);
+        }
+
+        return CreditReviewLogStatResponse.builder()
+                .totalCount(totalCount)
+                .successCount(successCount)
+                .failedCount(failedCount)
+                .approveCount(approveCount)
+                .rejectCount(rejectCount)
+                .successRate(successRate)
+                .build();
     }
 
     private String normalizeRole(String operatorRole) {

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface CreditReviewLogRepository extends JpaRepository<CreditReviewLog, Long> {
 
@@ -28,4 +29,19 @@ public interface CreditReviewLogRepository extends JpaRepository<CreditReviewLog
                                  @Param("startTime") LocalDateTime startTime,
                                  @Param("endTime") LocalDateTime endTime,
                                  Pageable pageable);
+
+    @Query("""
+            SELECT log
+            FROM CreditReviewLog log
+            WHERE (:recordId IS NULL OR log.recordId = :recordId)
+              AND (:action IS NULL OR log.action = :action)
+              AND (:success IS NULL OR log.success = :success)
+              AND (:startTime IS NULL OR log.createdAt >= :startTime)
+              AND (:endTime IS NULL OR log.createdAt <= :endTime)
+            """)
+    List<CreditReviewLog> searchAll(@Param("recordId") Long recordId,
+                                    @Param("action") CreditReviewAction action,
+                                    @Param("success") Boolean success,
+                                    @Param("startTime") LocalDateTime startTime,
+                                    @Param("endTime") LocalDateTime endTime);
 }

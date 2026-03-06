@@ -41,6 +41,7 @@ $approveBody = @{
 
 $approveResp = Invoke-RestMethod -Method Post -Uri "$baseUrl/api/credits/$recordId/approve" -Headers $adminHeaders -ContentType "application/json" -Body $approveBody
 $reviewLogPageResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/review-logs/page?page=0&size=10&recordId=$recordId" -Headers $adminHeaders
+$reviewLogStatsResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/review-logs/stats?recordId=$recordId" -Headers $adminHeaders
 $approvedPageResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/students/$studentId/records/page?page=0&size=10&status=APPROVED"
 $summaryResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/students/$studentId/summary"
 $categoryStatsResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytics/categories"
@@ -73,6 +74,9 @@ $pendingAdminPageResp | ConvertTo-Json -Depth 8
 
 Write-Host "`nReview Log Page Result:"
 $reviewLogPageResp | ConvertTo-Json -Depth 8
+
+Write-Host "`nReview Log Stats Result:"
+$reviewLogStatsResp | ConvertTo-Json -Depth 8
 
 Write-Host "`nApproved Page Result:"
 $approvedPageResp | ConvertTo-Json -Depth 8
