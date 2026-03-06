@@ -20,6 +20,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -383,10 +384,10 @@ class CreditServiceTest {
         record.setStatus(CreditStatus.PENDING);
 
         when(studentService.findById(1L)).thenReturn(student);
-        when(creditRecordRepository.findByStudentIdAndStatus(1L, CreditStatus.PENDING, PageRequest.of(0, 10)))
+        when(creditRecordRepository.searchStudentRecords(1L, CreditStatus.PENDING, null, null, null, PageRequest.of(0, 10)))
                 .thenReturn(new PageImpl<>(List.of(record), PageRequest.of(0, 10), 1));
 
-        var result = creditService.listStudentRecordsPage(1L, CreditStatus.PENDING, 0, 10);
+        var result = creditService.listStudentRecordsPage(1L, CreditStatus.PENDING, null, null, null, 0, 10);
 
         assertEquals(0, result.getPage());
         assertEquals(10, result.getSize());
@@ -399,7 +400,21 @@ class CreditServiceTest {
     @Test
     void listStudentRecordsPageShouldThrowWhenSizeOutOfRange() {
         when(studentService.findById(1L)).thenReturn(new Student());
-        assertThrows(BusinessException.class, () -> creditService.listStudentRecordsPage(1L, null, 0, 101));
+        assertThrows(BusinessException.class, () -> creditService.listStudentRecordsPage(1L, null, null, null, null, 0, 101));
+    }
+
+    @Test
+    void listStudentRecordsPageShouldThrowWhenDateRangeInvalid() {
+        when(studentService.findById(1L)).thenReturn(new Student());
+        assertThrows(BusinessException.class, () -> creditService.listStudentRecordsPage(
+                1L,
+                null,
+                "志愿服务",
+                LocalDate.of(2026, 3, 10),
+                LocalDate.of(2026, 3, 1),
+                0,
+                10
+        ));
     }
 
     @Test

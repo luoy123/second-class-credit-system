@@ -24,6 +24,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -112,14 +115,26 @@ public class CreditService {
         return creditRecordRepository.findByStudentIdOrderByCreatedAtDesc(studentId);
     }
 
-    public PageResult<CreditRecord> listStudentRecordsPage(Long studentId, CreditStatus status, int page, int size) {
+    public PageResult<CreditRecord> listStudentRecordsPage(Long studentId,
+                                                           CreditStatus status,
+                                                           String category,
+                                                           LocalDate startDate,
+                                                           LocalDate endDate,
+                                                           int page,
+                                                           int size) {
         studentService.findById(studentId);
         validatePageParams(page, size);
+        validateDateRange(startDate, endDate);
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<CreditRecord> recordPage = status == null
-                ? creditRecordRepository.findByStudentId(studentId, pageable)
-                : creditRecordRepository.findByStudentIdAndStatus(studentId, status, pageable);
+        Page<CreditRecord> recordPage = creditRecordRepository.searchStudentRecords(
+                studentId,
+                status,
+                normalizeCategory(category),
+                resolveStartTime(startDate),
+                resolveEndTime(endDate),
+                pageable
+        );
 
         return buildPageResult(recordPage);
     }
@@ -277,6 +292,33 @@ public class CreditService {
         if (size <= 0 || size > 100) {
             throw new BusinessException("size 必须在 1 到 100 之间");
         }
+    }
+
+    private void validateDateRange(LocalDate startDate, LocalDate endDate) {
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new BusinessException("startDate 不能晚于 endDate");
+        }
+    }
+
+    private String normalizeCategory(String category) {
+        if (category == null || category.isBlank()) {
+            return null;
+        }
+        return category.trim();
+    }
+
+    private LocalDateTime resolveStartTime(LocalDate startDate) {
+        if (startDate == null) {
+            return null;
+        }
+        return startDate.atStartOfDay();
+    }
+
+    private LocalDateTime resolveEndTime(LocalDate endDate) {
+        if (endDate == null) {
+            return null;
+        }
+        return endDate.atTime(LocalTime.MAX);
     }
 
     private PageResult<CreditRecord> buildPageResult(Page<CreditRecord> recordPage) {

@@ -52,7 +52,7 @@ powershell -ExecutionPolicy Bypass -File "./scripts/api-smoke-test.ps1"
 - `POST /api/credits/batch/approve`：批量审核通过学分申请
 - `POST /api/credits/batch/reject`：批量驳回学分申请
 - `GET /api/credits/students/{studentId}/summary`：查询学分汇总
-- `GET /api/credits/students/{studentId}/records/page?page=0&size=10&status=PENDING`：分页查询学生学分记录
+- `GET /api/credits/students/{studentId}/records/page?page=0&size=10&status=PENDING&category=志愿服务&startDate=2026-03-01&endDate=2026-03-31`：分页查询学生学分记录（支持组合筛选）
 - `GET /api/credits/pending/page?page=0&size=10`：分页查询待审核记录
 - `GET /api/credits/review-logs/page?page=0&size=10&action=APPROVE&success=true&startDate=2026-03-01&endDate=2026-03-31`：分页查询审批日志
 - `GET /api/credits/review-logs/export?action=APPROVE&success=true&limit=1000`：导出审批日志 CSV

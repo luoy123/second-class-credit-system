@@ -87,10 +87,10 @@ curl -X POST "http://127.0.0.1:8080/api/credits/batch/reject" \
 curl "http://127.0.0.1:8080/api/credits/students/1/summary"
 ```
 
-### 9) 分页查询学分记录（支持状态筛选）
+### 9) 分页查询学分记录（支持状态/分类/日期组合筛选）
 
 ```bash
-curl "http://127.0.0.1:8080/api/credits/students/1/records/page?page=0&size=10&status=PENDING"
+curl "http://127.0.0.1:8080/api/credits/students/1/records/page?page=0&size=10&status=PENDING&category=志愿服务&startDate=2026-03-01&endDate=2026-03-31"
 ```
 
 ### 10) 分页查询待审核记录

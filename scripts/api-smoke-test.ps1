@@ -32,6 +32,7 @@ $applyBody = @{
 $applyResp = Invoke-RestMethod -Method Post -Uri "$baseUrl/api/credits/apply" -ContentType "application/json" -Body $applyBody
 $recordId = $applyResp.data.id
 $pendingPageResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/students/$studentId/records/page?page=0&size=10&status=PENDING"
+$filteredPendingPageResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/students/$studentId/records/page?page=0&size=10&status=PENDING&category=%E5%BF%97%E6%84%BF%E6%9C%8D%E5%8A%A1&startDate=2020-01-01&endDate=2100-12-31"
 $pendingAdminPageResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/pending/page?page=0&size=10" -Headers $adminHeaders
 
 $approveBody = @{
@@ -63,6 +64,9 @@ $approveResp | ConvertTo-Json -Depth 8
 
 Write-Host "`nPending Page Result:"
 $pendingPageResp | ConvertTo-Json -Depth 8
+
+Write-Host "`nFiltered Pending Page Result:"
+$filteredPendingPageResp | ConvertTo-Json -Depth 8
 
 Write-Host "`nPending Admin Page Result:"
 $pendingAdminPageResp | ConvertTo-Json -Depth 8

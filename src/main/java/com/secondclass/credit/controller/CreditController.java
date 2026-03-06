@@ -107,9 +107,12 @@ public class CreditController {
     public ApiResponse<PageResult<CreditRecord>> listStudentRecordsPage(
             @PathVariable Long studentId,
             @RequestParam(required = false) CreditStatus status,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "0") @Min(value = 0, message = "page 不能小于 0") int page,
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "size 不能小于 1") @Max(value = 100, message = "size 不能大于 100") int size) {
-        return ApiResponse.success(creditService.listStudentRecordsPage(studentId, status, page, size));
+        return ApiResponse.success(creditService.listStudentRecordsPage(studentId, status, category, startDate, endDate, page, size));
     }
 
     @GetMapping("/pending/page")
