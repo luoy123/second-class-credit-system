@@ -13,6 +13,7 @@
 - 学生学分汇总统计（总学分 + 分类汇总）
 - 多维统计分析（分类、专业、年级、月份、排名）
 - CSV 报表导出（分类统计、排名统计）
+- Vue 管理端（登录、审批、统计、日志）前后端分离部署
 
 ## 本地启动
 
@@ -31,13 +32,25 @@
      - `AUTH_ADMIN_PASSWORD`
      - `JWT_SECRET`
      - `JWT_EXPIRE_SECONDS`
-4. 执行命令：
+4. 启动后端服务：
 
 ```bash
 mvn spring-boot:run
 ```
 
-5. 运行接口联调脚本（可选）
+5. 启动前端服务（新终端）：
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+6. 访问地址：
+   - 前端管理端：`http://127.0.0.1:5173`
+   - 后端接口：`http://127.0.0.1:8080/api`
+
+7. 运行接口联调脚本（可选）
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File "./scripts/api-smoke-test.ps1"
