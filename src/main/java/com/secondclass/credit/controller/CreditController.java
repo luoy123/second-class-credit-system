@@ -12,8 +12,11 @@ import com.secondclass.credit.domain.dto.MonthlyCreditStatResponse;
 import com.secondclass.credit.domain.dto.PageResult;
 import com.secondclass.credit.domain.dto.StudentCreditRankingResponse;
 import com.secondclass.credit.domain.entity.CreditRecord;
+import com.secondclass.credit.domain.entity.CreditReviewLog;
+import com.secondclass.credit.domain.enums.CreditReviewAction;
 import com.secondclass.credit.domain.enums.CreditStatus;
 import com.secondclass.credit.service.CreditReportService;
+import com.secondclass.credit.service.CreditReviewLogService;
 import com.secondclass.credit.service.CreditService;
 import com.secondclass.credit.service.RoleAuthService;
 import jakarta.validation.Valid;
@@ -44,6 +47,7 @@ public class CreditController {
 
     private final CreditService creditService;
     private final CreditReportService creditReportService;
+    private final CreditReviewLogService creditReviewLogService;
     private final RoleAuthService roleAuthService;
 
     @PostMapping("/apply")
@@ -113,6 +117,18 @@ public class CreditController {
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "size 不能小于 1") @Max(value = 100, message = "size 不能大于 100") int size) {
         roleAuthService.requireAdmin(roleHeader);
         return ApiResponse.success(creditService.listPendingRecordsPage(page, size));
+    }
+
+    @GetMapping("/review-logs/page")
+    public ApiResponse<PageResult<CreditReviewLog>> listReviewLogsPage(
+            @RequestHeader(value = "X-Role", required = false) String roleHeader,
+            @RequestParam(required = false) Long recordId,
+            @RequestParam(required = false) CreditReviewAction action,
+            @RequestParam(required = false) Boolean success,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "page 不能小于 0") int page,
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "size 不能小于 1") @Max(value = 100, message = "size 不能大于 100") int size) {
+        roleAuthService.requireAdmin(roleHeader);
+        return ApiResponse.success(creditReviewLogService.listLogsPage(recordId, action, success, page, size));
     }
 
     @GetMapping("/analytics/categories")

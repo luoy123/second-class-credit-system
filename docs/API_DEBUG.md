@@ -99,43 +99,49 @@ curl "http://127.0.0.1:8080/api/credits/students/1/records/page?page=0&size=10&s
 curl -H "X-Role: ADMIN" "http://127.0.0.1:8080/api/credits/pending/page?page=0&size=10"
 ```
 
-### 11) 查询分类统计
+### 11) 分页查询审批日志（可按动作/结果筛选）
+
+```bash
+curl -H "X-Role: ADMIN" "http://127.0.0.1:8080/api/credits/review-logs/page?page=0&size=10&action=APPROVE&success=true"
+```
+
+### 12) 查询分类统计
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/categories"
 ```
 
-### 12) 查询专业统计
+### 13) 查询专业统计
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/majors"
 ```
 
-### 13) 查询年级统计
+### 14) 查询年级统计
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/grades"
 ```
 
-### 14) 查询年度按月统计
+### 15) 查询年度按月统计
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/monthly?year=2026"
 ```
 
-### 15) 查询学分排名
+### 16) 查询学分排名
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/ranking?topN=10"
 ```
 
-### 16) 导出分类统计 CSV
+### 17) 导出分类统计 CSV
 
 ```bash
 curl -L -H "X-Role: ADMIN" "http://127.0.0.1:8080/api/credits/analytics/export/categories" -o "category_statistics.csv"
 ```
 
-### 17) 导出排名统计 CSV
+### 18) 导出排名统计 CSV
 
 ```bash
 curl -L -H "X-Role: ADMIN" "http://127.0.0.1:8080/api/credits/analytics/export/ranking?topN=10" -o "student_ranking.csv"
