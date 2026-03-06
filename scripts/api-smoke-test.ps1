@@ -30,12 +30,14 @@ $applyBody = @{
 
 $applyResp = Invoke-RestMethod -Method Post -Uri "$baseUrl/api/credits/apply" -ContentType "application/json" -Body $applyBody
 $recordId = $applyResp.data.id
+$pendingPageResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/students/$studentId/records/page?page=0&size=10&status=PENDING"
 
 $approveBody = @{
     remark = "联调脚本自动审核通过"
 } | ConvertTo-Json
 
 $approveResp = Invoke-RestMethod -Method Post -Uri "$baseUrl/api/credits/$recordId/approve" -ContentType "application/json" -Body $approveBody
+$approvedPageResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/students/$studentId/records/page?page=0&size=10&status=APPROVED"
 $summaryResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/students/$studentId/summary"
 $categoryStatsResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytics/categories"
 $majorStatsResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytics/majors"
@@ -53,6 +55,12 @@ $applyResp | ConvertTo-Json -Depth 8
 
 Write-Host "`nApprove Result:"
 $approveResp | ConvertTo-Json -Depth 8
+
+Write-Host "`nPending Page Result:"
+$pendingPageResp | ConvertTo-Json -Depth 8
+
+Write-Host "`nApproved Page Result:"
+$approvedPageResp | ConvertTo-Json -Depth 8
 
 Write-Host "`nSummary Result:"
 $summaryResp | ConvertTo-Json -Depth 8

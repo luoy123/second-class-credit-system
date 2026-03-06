@@ -4,6 +4,7 @@ import com.secondclass.credit.domain.dto.CategoryCreditStatResponse;
 import com.secondclass.credit.domain.dto.CreditApplyRequest;
 import com.secondclass.credit.domain.dto.DimensionCreditStatResponse;
 import com.secondclass.credit.domain.dto.MonthlyCreditStatResponse;
+import com.secondclass.credit.domain.dto.PageResult;
 import com.secondclass.credit.domain.dto.StudentCreditRankingResponse;
 import com.secondclass.credit.domain.dto.CreditSummaryResponse;
 import com.secondclass.credit.domain.entity.Activity;
@@ -15,6 +16,9 @@ import com.secondclass.credit.exception.BusinessException;
 import com.secondclass.credit.repository.CreditRecordRepository;
 import com.secondclass.credit.repository.CreditRuleRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -94,6 +98,29 @@ public class CreditService {
     public List<CreditRecord> listStudentRecords(Long studentId) {
         studentService.findById(studentId);
         return creditRecordRepository.findByStudentIdOrderByCreatedAtDesc(studentId);
+    }
+
+    public PageResult<CreditRecord> listStudentRecordsPage(Long studentId, CreditStatus status, int page, int size) {
+        studentService.findById(studentId);
+        if (page < 0) {
+            throw new BusinessException("page 不能小于 0");
+        }
+        if (size <= 0 || size > 100) {
+            throw new BusinessException("size 必须在 1 到 100 之间");
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CreditRecord> recordPage = status == null
+                ? creditRecordRepository.findByStudentId(studentId, pageable)
+                : creditRecordRepository.findByStudentIdAndStatus(studentId, status, pageable);
+
+        return PageResult.<CreditRecord>builder()
+                .page(recordPage.getNumber())
+                .size(recordPage.getSize())
+                .totalElements(recordPage.getTotalElements())
+                .totalPages(recordPage.getTotalPages())
+                .content(recordPage.getContent())
+                .build();
     }
 
     public List<CategoryCreditStatResponse> getCategoryStatistics() {

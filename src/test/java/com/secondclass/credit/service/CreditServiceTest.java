@@ -15,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -337,5 +339,35 @@ class CreditServiceTest {
     @Test
     void getStudentRankingShouldThrowWhenTopNIsInvalid() {
         assertThrows(BusinessException.class, () -> creditService.getStudentRanking(0));
+    }
+
+    @Test
+    void listStudentRecordsPageShouldFilterByStatus() {
+        Student student = new Student();
+        student.setId(1L);
+
+        CreditRecord record = new CreditRecord();
+        record.setId(100L);
+        record.setStudentId(1L);
+        record.setStatus(CreditStatus.PENDING);
+
+        when(studentService.findById(1L)).thenReturn(student);
+        when(creditRecordRepository.findByStudentIdAndStatus(1L, CreditStatus.PENDING, PageRequest.of(0, 10)))
+                .thenReturn(new PageImpl<>(List.of(record), PageRequest.of(0, 10), 1));
+
+        var result = creditService.listStudentRecordsPage(1L, CreditStatus.PENDING, 0, 10);
+
+        assertEquals(0, result.getPage());
+        assertEquals(10, result.getSize());
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.getTotalPages());
+        assertEquals(1, result.getContent().size());
+        assertEquals(100L, result.getContent().get(0).getId());
+    }
+
+    @Test
+    void listStudentRecordsPageShouldThrowWhenSizeOutOfRange() {
+        when(studentService.findById(1L)).thenReturn(new Student());
+        assertThrows(BusinessException.class, () -> creditService.listStudentRecordsPage(1L, null, 0, 101));
     }
 }

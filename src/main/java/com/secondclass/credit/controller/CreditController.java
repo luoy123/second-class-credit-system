@@ -7,8 +7,10 @@ import com.secondclass.credit.domain.dto.CreditReviewRequest;
 import com.secondclass.credit.domain.dto.CreditSummaryResponse;
 import com.secondclass.credit.domain.dto.DimensionCreditStatResponse;
 import com.secondclass.credit.domain.dto.MonthlyCreditStatResponse;
+import com.secondclass.credit.domain.dto.PageResult;
 import com.secondclass.credit.domain.dto.StudentCreditRankingResponse;
 import com.secondclass.credit.domain.entity.CreditRecord;
+import com.secondclass.credit.domain.enums.CreditStatus;
 import com.secondclass.credit.service.CreditReportService;
 import com.secondclass.credit.service.CreditService;
 import jakarta.validation.Valid;
@@ -68,6 +70,15 @@ public class CreditController {
     @GetMapping("/students/{studentId}/records")
     public ApiResponse<List<CreditRecord>> listStudentRecords(@PathVariable Long studentId) {
         return ApiResponse.success(creditService.listStudentRecords(studentId));
+    }
+
+    @GetMapping("/students/{studentId}/records/page")
+    public ApiResponse<PageResult<CreditRecord>> listStudentRecordsPage(
+            @PathVariable Long studentId,
+            @RequestParam(required = false) CreditStatus status,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "page 不能小于 0") int page,
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "size 不能小于 1") @Max(value = 100, message = "size 不能大于 100") int size) {
+        return ApiResponse.success(creditService.listStudentRecordsPage(studentId, status, page, size));
     }
 
     @GetMapping("/analytics/categories")
