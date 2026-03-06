@@ -6,6 +6,7 @@ import com.secondclass.credit.domain.entity.Activity;
 import com.secondclass.credit.domain.entity.CreditRecord;
 import com.secondclass.credit.domain.entity.CreditRule;
 import com.secondclass.credit.domain.entity.Student;
+import com.secondclass.credit.domain.enums.CreditReviewAction;
 import com.secondclass.credit.domain.enums.CreditStatus;
 import com.secondclass.credit.exception.BusinessException;
 import com.secondclass.credit.repository.CreditRecordRepository;
@@ -27,6 +28,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -45,6 +48,9 @@ class CreditServiceTest {
 
     @Mock
     private ActivityService activityService;
+
+    @Mock
+    private CreditReviewLogService creditReviewLogService;
 
     @InjectMocks
     private CreditService creditService;
@@ -110,10 +116,18 @@ class CreditServiceTest {
         when(creditRecordRepository.findById(10L)).thenReturn(Optional.of(record));
         when(creditRecordRepository.save(any(CreditRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        CreditRecord result = creditService.approve(10L, "通过");
+        CreditRecord result = creditService.approve(10L, "通过", "ADMIN");
 
         assertEquals(CreditStatus.APPROVED, result.getStatus());
         assertEquals("通过", result.getRemark());
+        verify(creditReviewLogService).saveLog(
+                eq(10L),
+                eq(CreditReviewAction.APPROVE),
+                eq("ADMIN"),
+                eq("通过"),
+                eq(true),
+                isNull()
+        );
     }
 
     @Test
@@ -125,10 +139,18 @@ class CreditServiceTest {
         when(creditRecordRepository.findById(11L)).thenReturn(Optional.of(record));
         when(creditRecordRepository.save(any(CreditRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        CreditRecord result = creditService.reject(11L, "材料不足");
+        CreditRecord result = creditService.reject(11L, "材料不足", "ADMIN");
 
         assertEquals(CreditStatus.REJECTED, result.getStatus());
         assertEquals("材料不足", result.getRemark());
+        verify(creditReviewLogService).saveLog(
+                eq(11L),
+                eq(CreditReviewAction.REJECT),
+                eq("ADMIN"),
+                eq("材料不足"),
+                eq(true),
+                isNull()
+        );
     }
 
     @Test
@@ -139,8 +161,16 @@ class CreditServiceTest {
 
         when(creditRecordRepository.findById(12L)).thenReturn(Optional.of(record));
 
-        assertThrows(BusinessException.class, () -> creditService.approve(12L, "重复审核"));
+        assertThrows(BusinessException.class, () -> creditService.approve(12L, "重复审核", "ADMIN"));
         verify(creditRecordRepository, never()).save(any(CreditRecord.class));
+        verify(creditReviewLogService).saveLog(
+                eq(12L),
+                eq(CreditReviewAction.APPROVE),
+                eq("ADMIN"),
+                eq("重复审核"),
+                eq(false),
+                eq("仅待审核记录可变更状态，当前状态=APPROVED")
+        );
     }
 
     @Test
@@ -403,13 +433,37 @@ class CreditServiceTest {
         when(creditRecordRepository.findById(3L)).thenReturn(Optional.empty());
         when(creditRecordRepository.save(any(CreditRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var result = creditService.batchApprove(Arrays.asList(1L, 2L, 3L, 1L, null), "批量通过");
+        var result = creditService.batchApprove(Arrays.asList(1L, 2L, 3L, 1L, null), "批量通过", "ADMIN");
 
         assertEquals(3, result.getTotal());
         assertEquals(1, result.getSuccess());
         assertEquals(2, result.getFailedIds().size());
         assertEquals(CreditStatus.APPROVED, pendingRecord.getStatus());
         assertEquals("批量通过", pendingRecord.getRemark());
+        verify(creditReviewLogService).saveLog(
+                eq(1L),
+                eq(CreditReviewAction.APPROVE),
+                eq("ADMIN"),
+                eq("批量通过"),
+                eq(true),
+                isNull()
+        );
+        verify(creditReviewLogService).saveLog(
+                eq(2L),
+                eq(CreditReviewAction.APPROVE),
+                eq("ADMIN"),
+                eq("批量通过"),
+                eq(false),
+                eq("仅待审核记录可变更状态，当前状态=APPROVED")
+        );
+        verify(creditReviewLogService).saveLog(
+                eq(3L),
+                eq(CreditReviewAction.APPROVE),
+                eq("ADMIN"),
+                eq("批量通过"),
+                eq(false),
+                eq("学分记录不存在")
+        );
     }
 
     @Test
@@ -426,12 +480,28 @@ class CreditServiceTest {
         when(creditRecordRepository.findById(12L)).thenReturn(Optional.of(pendingRecord2));
         when(creditRecordRepository.save(any(CreditRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var result = creditService.batchReject(List.of(11L, 12L), "批量驳回");
+        var result = creditService.batchReject(List.of(11L, 12L), "批量驳回", "ADMIN");
 
         assertEquals(2, result.getTotal());
         assertEquals(2, result.getSuccess());
         assertEquals(0, result.getFailedIds().size());
         assertEquals(CreditStatus.REJECTED, pendingRecord1.getStatus());
         assertEquals(CreditStatus.REJECTED, pendingRecord2.getStatus());
+        verify(creditReviewLogService).saveLog(
+                eq(11L),
+                eq(CreditReviewAction.REJECT),
+                eq("ADMIN"),
+                eq("批量驳回"),
+                eq(true),
+                isNull()
+        );
+        verify(creditReviewLogService).saveLog(
+                eq(12L),
+                eq(CreditReviewAction.REJECT),
+                eq("ADMIN"),
+                eq("批量驳回"),
+                eq(true),
+                isNull()
+        );
     }
 }

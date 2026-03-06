@@ -12,6 +12,7 @@ import com.secondclass.credit.domain.entity.Activity;
 import com.secondclass.credit.domain.entity.CreditRecord;
 import com.secondclass.credit.domain.entity.CreditRule;
 import com.secondclass.credit.domain.entity.Student;
+import com.secondclass.credit.domain.enums.CreditReviewAction;
 import com.secondclass.credit.domain.enums.CreditStatus;
 import com.secondclass.credit.exception.BusinessException;
 import com.secondclass.credit.repository.CreditRecordRepository;
@@ -40,6 +41,7 @@ public class CreditService {
     private final CreditRuleRepository creditRuleRepository;
     private final StudentService studentService;
     private final ActivityService activityService;
+    private final CreditReviewLogService creditReviewLogService;
 
     public CreditRecord apply(CreditApplyRequest request) {
         studentService.findById(request.getStudentId());
@@ -58,20 +60,20 @@ public class CreditService {
         return creditRecordRepository.save(creditRecord);
     }
 
-    public CreditRecord approve(Long recordId, String reviewRemark) {
-        return updateRecordStatus(recordId, CreditStatus.APPROVED, reviewRemark);
+    public CreditRecord approve(Long recordId, String reviewRemark, String operatorRole) {
+        return updateRecordStatus(recordId, CreditStatus.APPROVED, reviewRemark, operatorRole);
     }
 
-    public CreditRecord reject(Long recordId, String reviewRemark) {
-        return updateRecordStatus(recordId, CreditStatus.REJECTED, reviewRemark);
+    public CreditRecord reject(Long recordId, String reviewRemark, String operatorRole) {
+        return updateRecordStatus(recordId, CreditStatus.REJECTED, reviewRemark, operatorRole);
     }
 
-    public CreditBatchReviewResult batchApprove(List<Long> recordIds, String reviewRemark) {
-        return batchUpdateStatus(recordIds, CreditStatus.APPROVED, reviewRemark);
+    public CreditBatchReviewResult batchApprove(List<Long> recordIds, String reviewRemark, String operatorRole) {
+        return batchUpdateStatus(recordIds, CreditStatus.APPROVED, reviewRemark, operatorRole);
     }
 
-    public CreditBatchReviewResult batchReject(List<Long> recordIds, String reviewRemark) {
-        return batchUpdateStatus(recordIds, CreditStatus.REJECTED, reviewRemark);
+    public CreditBatchReviewResult batchReject(List<Long> recordIds, String reviewRemark, String operatorRole) {
+        return batchUpdateStatus(recordIds, CreditStatus.REJECTED, reviewRemark, operatorRole);
     }
 
     public CreditSummaryResponse getStudentSummary(Long studentId) {
@@ -217,17 +219,27 @@ public class CreditService {
         return ruleCredit.min(activityMaxCredit);
     }
 
-    private CreditRecord updateRecordStatus(Long recordId, CreditStatus targetStatus, String reviewRemark) {
-        CreditRecord creditRecord = creditRecordRepository.findById(recordId)
-                .orElseThrow(() -> new BusinessException("学分记录不存在，id=" + recordId));
-        if (creditRecord.getStatus() != CreditStatus.PENDING) {
-            throw new BusinessException("仅待审核记录可变更状态，当前状态=" + creditRecord.getStatus());
+    private CreditRecord updateRecordStatus(Long recordId,
+                                            CreditStatus targetStatus,
+                                            String reviewRemark,
+                                            String operatorRole) {
+        try {
+            CreditRecord creditRecord = creditRecordRepository.findById(recordId)
+                    .orElseThrow(() -> new BusinessException("学分记录不存在，id=" + recordId));
+            if (creditRecord.getStatus() != CreditStatus.PENDING) {
+                throw new BusinessException("仅待审核记录可变更状态，当前状态=" + creditRecord.getStatus());
+            }
+            creditRecord.setStatus(targetStatus);
+            if (reviewRemark != null && !reviewRemark.isBlank()) {
+                creditRecord.setRemark(reviewRemark);
+            }
+            CreditRecord saved = creditRecordRepository.save(creditRecord);
+            logReviewResult(recordId, targetStatus, operatorRole, reviewRemark, true, null);
+            return saved;
+        } catch (BusinessException ex) {
+            logReviewResult(recordId, targetStatus, operatorRole, reviewRemark, false, ex.getMessage());
+            throw ex;
         }
-        creditRecord.setStatus(targetStatus);
-        if (reviewRemark != null && !reviewRemark.isBlank()) {
-            creditRecord.setRemark(reviewRemark);
-        }
-        return creditRecordRepository.save(creditRecord);
     }
 
     private List<DimensionCreditStatResponse> getDimensionStatistics(Function<Student, String> dimensionResolver) {
@@ -277,7 +289,10 @@ public class CreditService {
                 .build();
     }
 
-    private CreditBatchReviewResult batchUpdateStatus(List<Long> recordIds, CreditStatus targetStatus, String reviewRemark) {
+    private CreditBatchReviewResult batchUpdateStatus(List<Long> recordIds,
+                                                      CreditStatus targetStatus,
+                                                      String reviewRemark,
+                                                      String operatorRole) {
         List<Long> normalizedIds = recordIds.stream()
                 .filter(Objects::nonNull)
                 .distinct()
@@ -288,7 +303,14 @@ public class CreditService {
 
         for (Long recordId : normalizedIds) {
             CreditRecord creditRecord = creditRecordRepository.findById(recordId).orElse(null);
-            if (creditRecord == null || creditRecord.getStatus() != CreditStatus.PENDING) {
+            if (creditRecord == null) {
+                logReviewResult(recordId, targetStatus, operatorRole, reviewRemark, false, "学分记录不存在");
+                failedIds.add(recordId);
+                continue;
+            }
+            if (creditRecord.getStatus() != CreditStatus.PENDING) {
+                logReviewResult(recordId, targetStatus, operatorRole, reviewRemark, false,
+                        "仅待审核记录可变更状态，当前状态=" + creditRecord.getStatus());
                 failedIds.add(recordId);
                 continue;
             }
@@ -297,6 +319,7 @@ public class CreditService {
                 creditRecord.setRemark(reviewRemark);
             }
             creditRecordRepository.save(creditRecord);
+            logReviewResult(recordId, targetStatus, operatorRole, reviewRemark, true, null);
             success++;
         }
 
@@ -305,5 +328,31 @@ public class CreditService {
                 .success(success)
                 .failedIds(failedIds)
                 .build();
+    }
+
+    private void logReviewResult(Long recordId,
+                                 CreditStatus targetStatus,
+                                 String operatorRole,
+                                 String reviewRemark,
+                                 boolean success,
+                                 String detail) {
+        creditReviewLogService.saveLog(
+                recordId,
+                resolveReviewAction(targetStatus),
+                operatorRole,
+                reviewRemark,
+                success,
+                detail
+        );
+    }
+
+    private CreditReviewAction resolveReviewAction(CreditStatus targetStatus) {
+        if (targetStatus == CreditStatus.APPROVED) {
+            return CreditReviewAction.APPROVE;
+        }
+        if (targetStatus == CreditStatus.REJECTED) {
+            return CreditReviewAction.REJECT;
+        }
+        throw new BusinessException("不支持的审核目标状态：" + targetStatus);
     }
 }

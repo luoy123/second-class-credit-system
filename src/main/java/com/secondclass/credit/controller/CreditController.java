@@ -58,7 +58,7 @@ public class CreditController {
             @Valid @RequestBody(required = false) CreditReviewRequest request) {
         roleAuthService.requireAdmin(roleHeader);
         String remark = request == null ? null : request.getRemark();
-        return ApiResponse.success(creditService.approve(recordId, remark));
+        return ApiResponse.success(creditService.approve(recordId, remark, roleHeader));
     }
 
     @PostMapping("/{recordId}/reject")
@@ -68,7 +68,7 @@ public class CreditController {
             @Valid @RequestBody(required = false) CreditReviewRequest request) {
         roleAuthService.requireAdmin(roleHeader);
         String remark = request == null ? null : request.getRemark();
-        return ApiResponse.success(creditService.reject(recordId, remark));
+        return ApiResponse.success(creditService.reject(recordId, remark, roleHeader));
     }
 
     @PostMapping("/batch/approve")
@@ -76,7 +76,7 @@ public class CreditController {
             @RequestHeader(value = "X-Role", required = false) String roleHeader,
             @Valid @RequestBody CreditBatchReviewRequest request) {
         roleAuthService.requireAdmin(roleHeader);
-        return ApiResponse.success(creditService.batchApprove(request.getRecordIds(), request.getRemark()));
+        return ApiResponse.success(creditService.batchApprove(request.getRecordIds(), request.getRemark(), roleHeader));
     }
 
     @PostMapping("/batch/reject")
@@ -84,7 +84,7 @@ public class CreditController {
             @RequestHeader(value = "X-Role", required = false) String roleHeader,
             @Valid @RequestBody CreditBatchReviewRequest request) {
         roleAuthService.requireAdmin(roleHeader);
-        return ApiResponse.success(creditService.batchReject(request.getRecordIds(), request.getRemark()));
+        return ApiResponse.success(creditService.batchReject(request.getRecordIds(), request.getRemark(), roleHeader));
     }
 
     @GetMapping("/students/{studentId}/summary")

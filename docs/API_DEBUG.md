@@ -8,6 +8,7 @@
   - `sql/init_seed_data.sql`
 - 服务已启动：`mvn spring-boot:run`
 - 管理员接口需携带请求头：`X-Role: ADMIN`
+- 已执行增量脚本（若是旧库）：`sql/patch_add_credit_review_log_table.sql`
 
 ## 推荐联调顺序
 
@@ -138,6 +139,17 @@ curl -L -H "X-Role: ADMIN" "http://127.0.0.1:8080/api/credits/analytics/export/c
 
 ```bash
 curl -L -H "X-Role: ADMIN" "http://127.0.0.1:8080/api/credits/analytics/export/ranking?topN=10" -o "student_ranking.csv"
+```
+
+## 审批日志核验（SQL）
+
+审批通过、驳回、批量审核都会写入 `sc_credit_review_log`，可用以下 SQL 查看：
+
+```sql
+SELECT id, record_id, action, operator_role, success, remark, detail, created_at
+FROM sc_credit_review_log
+ORDER BY id DESC
+LIMIT 20;
 ```
 
 ## PowerShell 一键联调

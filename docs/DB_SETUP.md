@@ -6,12 +6,14 @@
 2. `sql/init_schema.sql`
 3. `sql/init_seed_data.sql`
 4. （增量）`sql/patch_add_pending_index.sql`
+5. （增量）`sql/patch_add_credit_review_log_table.sql`
 
 ## 命令示例
 
 ```bash
 mysql -h127.0.0.1 -uroot -p second_class_credit < sql/init_schema.sql
 mysql -h127.0.0.1 -uroot -p second_class_credit < sql/init_seed_data.sql
+mysql -h127.0.0.1 -uroot -p second_class_credit < sql/patch_add_credit_review_log_table.sql
 ```
 
 ## 说明
@@ -19,3 +21,4 @@ mysql -h127.0.0.1 -uroot -p second_class_credit < sql/init_seed_data.sql
 - 若重复执行，`CREATE TABLE IF NOT EXISTS` 不会覆盖现有表
 - 若已存在表结构且需补充新索引，请手动执行对应 `ALTER TABLE` 或重建测试库后重跑脚本
 - 学分规则脚本使用 `ON DUPLICATE KEY UPDATE`，可用于更新基础规则
+- 审批动作日志保存在 `sc_credit_review_log` 表中，记录审批动作、角色、结果与失败原因

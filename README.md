@@ -9,6 +9,7 @@
 - 学生信息管理（新增、查询）
 - 第二课堂活动管理（新增、查询）
 - 学分申请、审核与记录管理
+- 管理员审批操作日志（成功/失败全量留痕）
 - 学生学分汇总统计（总学分 + 分类汇总）
 - 多维统计分析（分类、专业、年级、月份、排名）
 - CSV 报表导出（分类统计、排名统计）
@@ -20,6 +21,7 @@
 2. 初始化表结构与基础规则数据
    - 执行 `sql/init_schema.sql`
    - 执行 `sql/init_seed_data.sql`
+   - 已存在库可执行增量脚本：`sql/patch_add_credit_review_log_table.sql`
 3. 配置数据库连接环境变量（推荐）
    - `DB_URL`
    - `DB_USERNAME`
@@ -39,6 +41,7 @@ powershell -ExecutionPolicy Bypass -File "./scripts/api-smoke-test.ps1"
 ## API 示例
 
 - 管理员接口需携带请求头：`X-Role: ADMIN`
+- 审批与批量审批接口会自动写入 `sc_credit_review_log`
 
 - `POST /api/students`：创建学生
 - `GET /api/students/{id}`：查询学生
