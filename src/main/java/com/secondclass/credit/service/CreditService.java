@@ -1,6 +1,9 @@
 package com.secondclass.credit.service;
 
+import com.secondclass.credit.domain.dto.CategoryCreditStatResponse;
 import com.secondclass.credit.domain.dto.CreditApplyRequest;
+import com.secondclass.credit.domain.dto.MonthlyCreditStatResponse;
+import com.secondclass.credit.domain.dto.StudentCreditRankingResponse;
 import com.secondclass.credit.domain.dto.CreditSummaryResponse;
 import com.secondclass.credit.domain.entity.Activity;
 import com.secondclass.credit.domain.entity.CreditRecord;
@@ -14,10 +17,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -79,6 +85,77 @@ public class CreditService {
     public List<CreditRecord> listStudentRecords(Long studentId) {
         studentService.findById(studentId);
         return creditRecordRepository.findByStudentIdOrderByCreatedAtDesc(studentId);
+    }
+
+    public List<CategoryCreditStatResponse> getCategoryStatistics() {
+        List<CreditRecord> approvedRecords = creditRecordRepository.findByStatus(CreditStatus.APPROVED);
+        Map<String, BigDecimal> categoryCreditMap = approvedRecords.stream()
+                .collect(Collectors.groupingBy(
+                        CreditRecord::getCategory,
+                        Collectors.reducing(BigDecimal.ZERO, CreditRecord::getCredit, BigDecimal::add)
+                ));
+        return categoryCreditMap.entrySet().stream()
+                .map(entry -> CategoryCreditStatResponse.builder()
+                        .category(entry.getKey())
+                        .totalCredit(entry.getValue())
+                        .build())
+                .sorted(Comparator.comparing(CategoryCreditStatResponse::getCategory))
+                .toList();
+    }
+
+    public List<MonthlyCreditStatResponse> getMonthlyStatistics(int year) {
+        List<CreditRecord> approvedRecords = creditRecordRepository.findByStatus(CreditStatus.APPROVED);
+        Map<Integer, BigDecimal> monthCreditMap = approvedRecords.stream()
+                .filter(record -> record.getCreatedAt() != null && record.getCreatedAt().getYear() == year)
+                .collect(Collectors.groupingBy(
+                        record -> record.getCreatedAt().getMonthValue(),
+                        Collectors.reducing(BigDecimal.ZERO, CreditRecord::getCredit, BigDecimal::add)
+                ));
+        return IntStream.rangeClosed(1, 12)
+                .mapToObj(month -> MonthlyCreditStatResponse.builder()
+                        .month(month)
+                        .totalCredit(monthCreditMap.getOrDefault(month, BigDecimal.ZERO))
+                        .build())
+                .toList();
+    }
+
+    public List<StudentCreditRankingResponse> getStudentRanking(int topN) {
+        if (topN <= 0) {
+            throw new BusinessException("topN 必须大于 0");
+        }
+
+        List<CreditRecord> approvedRecords = creditRecordRepository.findByStatus(CreditStatus.APPROVED);
+        Map<Long, BigDecimal> studentCreditMap = approvedRecords.stream()
+                .collect(Collectors.groupingBy(
+                        CreditRecord::getStudentId,
+                        Collectors.reducing(BigDecimal.ZERO, CreditRecord::getCredit, BigDecimal::add)
+                ));
+
+        Map<Long, Student> studentMap = studentService.list().stream()
+                .collect(Collectors.toMap(Student::getId, Function.identity()));
+
+        List<Map.Entry<Long, BigDecimal>> rankingEntries = studentCreditMap.entrySet().stream()
+                .sorted(Map.Entry.<Long, BigDecimal>comparingByValue(Comparator.reverseOrder())
+                        .thenComparing(Map.Entry.comparingByKey()))
+                .limit(topN)
+                .toList();
+
+        List<StudentCreditRankingResponse> ranking = new ArrayList<>();
+        int rank = 1;
+        for (Map.Entry<Long, BigDecimal> entry : rankingEntries) {
+            Student student = studentMap.get(entry.getKey());
+            if (student == null) {
+                continue;
+            }
+            ranking.add(StudentCreditRankingResponse.builder()
+                    .rank(rank++)
+                    .studentId(student.getId())
+                    .studentNo(student.getStudentNo())
+                    .studentName(student.getName())
+                    .totalCredit(entry.getValue())
+                    .build());
+        }
+        return ranking;
     }
 
     private BigDecimal resolveCredit(CreditRule creditRule, Activity activity) {

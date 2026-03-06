@@ -41,6 +41,9 @@ powershell -ExecutionPolicy Bypass -File "./scripts/api-smoke-test.ps1"
 - `POST /api/activities`：创建活动
 - `POST /api/credits/apply`：提交学分申请
 - `GET /api/credits/students/{studentId}/summary`：查询学分汇总
+- `GET /api/credits/analytics/categories`：查询分类学分统计
+- `GET /api/credits/analytics/monthly?year=2026`：查询年度按月学分统计
+- `GET /api/credits/analytics/ranking?topN=10`：查询学生学分排名
 
 ## 文档
 

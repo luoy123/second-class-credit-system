@@ -30,9 +30,21 @@ $applyBody = @{
 
 $applyResp = Invoke-RestMethod -Method Post -Uri "$baseUrl/api/credits/apply" -ContentType "application/json" -Body $applyBody
 $summaryResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/students/$studentId/summary"
+$categoryStatsResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytics/categories"
+$monthlyStatsResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytics/monthly?year=2026"
+$rankingResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytics/ranking?topN=10"
 
 Write-Host "Apply Result:"
 $applyResp | ConvertTo-Json -Depth 8
 
 Write-Host "`nSummary Result:"
 $summaryResp | ConvertTo-Json -Depth 8
+
+Write-Host "`nCategory Stats Result:"
+$categoryStatsResp | ConvertTo-Json -Depth 8
+
+Write-Host "`nMonthly Stats Result:"
+$monthlyStatsResp | ConvertTo-Json -Depth 8
+
+Write-Host "`nRanking Result:"
+$rankingResp | ConvertTo-Json -Depth 8

@@ -14,6 +14,7 @@
 2. 创建活动
 3. 提交学分申请
 4. 查询学生学分汇总
+5. 查询统计分析接口
 
 ## Curl 示例
 
@@ -45,6 +46,24 @@ curl -X POST "http://127.0.0.1:8080/api/credits/apply" \
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/students/1/summary"
+```
+
+### 5) 查询分类统计
+
+```bash
+curl "http://127.0.0.1:8080/api/credits/analytics/categories"
+```
+
+### 6) 查询年度按月统计
+
+```bash
+curl "http://127.0.0.1:8080/api/credits/analytics/monthly?year=2026"
+```
+
+### 7) 查询学分排名
+
+```bash
+curl "http://127.0.0.1:8080/api/credits/analytics/ranking?topN=10"
 ```
 
 ## PowerShell 一键联调

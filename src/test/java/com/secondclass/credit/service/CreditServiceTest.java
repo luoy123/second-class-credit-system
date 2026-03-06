@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -132,5 +133,98 @@ class CreditServiceTest {
         assertEquals(0, new BigDecimal("1.50").compareTo(summary.getCategoryCredits().get(0).getCredit()));
         assertEquals("B", summary.getCategoryCredits().get(1).getCategory());
         assertEquals(0, new BigDecimal("2.00").compareTo(summary.getCategoryCredits().get(1).getCredit()));
+    }
+
+    @Test
+    void getCategoryStatisticsShouldAggregateAndSort() {
+        CreditRecord r1 = new CreditRecord();
+        r1.setCategory("B");
+        r1.setCredit(new BigDecimal("1.00"));
+        r1.setStatus(CreditStatus.APPROVED);
+
+        CreditRecord r2 = new CreditRecord();
+        r2.setCategory("A");
+        r2.setCredit(new BigDecimal("2.00"));
+        r2.setStatus(CreditStatus.APPROVED);
+
+        CreditRecord r3 = new CreditRecord();
+        r3.setCategory("A");
+        r3.setCredit(new BigDecimal("0.50"));
+        r3.setStatus(CreditStatus.APPROVED);
+
+        when(creditRecordRepository.findByStatus(CreditStatus.APPROVED)).thenReturn(List.of(r1, r2, r3));
+
+        var result = creditService.getCategoryStatistics();
+
+        assertEquals(2, result.size());
+        assertEquals("A", result.get(0).getCategory());
+        assertEquals(0, new BigDecimal("2.50").compareTo(result.get(0).getTotalCredit()));
+        assertEquals("B", result.get(1).getCategory());
+        assertEquals(0, new BigDecimal("1.00").compareTo(result.get(1).getTotalCredit()));
+    }
+
+    @Test
+    void getMonthlyStatisticsShouldReturnTwelveMonthsAndAggregateCurrentYear() {
+        CreditRecord january = new CreditRecord();
+        january.setCredit(new BigDecimal("1.00"));
+        january.setCreatedAt(LocalDateTime.of(2026, 1, 10, 10, 0));
+
+        CreditRecord march = new CreditRecord();
+        march.setCredit(new BigDecimal("2.00"));
+        march.setCreatedAt(LocalDateTime.of(2026, 3, 8, 9, 0));
+
+        CreditRecord lastYear = new CreditRecord();
+        lastYear.setCredit(new BigDecimal("9.00"));
+        lastYear.setCreatedAt(LocalDateTime.of(2025, 3, 8, 9, 0));
+
+        when(creditRecordRepository.findByStatus(CreditStatus.APPROVED)).thenReturn(List.of(january, march, lastYear));
+
+        var result = creditService.getMonthlyStatistics(2026);
+
+        assertEquals(12, result.size());
+        assertEquals(0, new BigDecimal("1.00").compareTo(result.get(0).getTotalCredit()));
+        assertEquals(0, new BigDecimal("2.00").compareTo(result.get(2).getTotalCredit()));
+        assertEquals(0, BigDecimal.ZERO.compareTo(result.get(1).getTotalCredit()));
+    }
+
+    @Test
+    void getStudentRankingShouldReturnTopN() {
+        Student s1 = new Student();
+        s1.setId(1L);
+        s1.setStudentNo("20260001");
+        s1.setName("张三");
+
+        Student s2 = new Student();
+        s2.setId(2L);
+        s2.setStudentNo("20260002");
+        s2.setName("李四");
+
+        CreditRecord r1 = new CreditRecord();
+        r1.setStudentId(1L);
+        r1.setCredit(new BigDecimal("1.00"));
+
+        CreditRecord r2 = new CreditRecord();
+        r2.setStudentId(1L);
+        r2.setCredit(new BigDecimal("2.00"));
+
+        CreditRecord r3 = new CreditRecord();
+        r3.setStudentId(2L);
+        r3.setCredit(new BigDecimal("2.50"));
+
+        when(creditRecordRepository.findByStatus(CreditStatus.APPROVED)).thenReturn(List.of(r1, r2, r3));
+        when(studentService.list()).thenReturn(List.of(s1, s2));
+
+        var result = creditService.getStudentRanking(1);
+
+        assertEquals(1, result.size());
+        assertEquals(1, result.get(0).getRank());
+        assertEquals(1L, result.get(0).getStudentId());
+        assertEquals("20260001", result.get(0).getStudentNo());
+        assertEquals(0, new BigDecimal("3.00").compareTo(result.get(0).getTotalCredit()));
+    }
+
+    @Test
+    void getStudentRankingShouldThrowWhenTopNIsInvalid() {
+        assertThrows(BusinessException.class, () -> creditService.getStudentRanking(0));
     }
 }

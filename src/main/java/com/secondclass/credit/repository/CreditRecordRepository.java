@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface CreditRecordRepository extends JpaRepository<CreditRecord, Long> {
 
+    List<CreditRecord> findByStatus(CreditStatus status);
+
     List<CreditRecord> findByStudentIdAndStatus(Long studentId, CreditStatus status);
 
     List<CreditRecord> findByStudentIdOrderByCreatedAtDesc(Long studentId);
