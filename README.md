@@ -46,6 +46,7 @@ powershell -ExecutionPolicy Bypass -File "./scripts/api-smoke-test.ps1"
 - `POST /api/credits/{recordId}/reject`：驳回学分申请
 - `GET /api/credits/students/{studentId}/summary`：查询学分汇总
 - `GET /api/credits/students/{studentId}/records/page?page=0&size=10&status=PENDING`：分页查询学生学分记录
+- `GET /api/credits/pending/page?page=0&size=10`：分页查询待审核记录
 - `GET /api/credits/analytics/categories`：查询分类学分统计
 - `GET /api/credits/analytics/majors`：查询专业学分统计
 - `GET /api/credits/analytics/grades`：查询年级学分统计

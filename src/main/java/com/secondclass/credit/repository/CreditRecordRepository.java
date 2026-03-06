@@ -19,4 +19,6 @@ public interface CreditRecordRepository extends JpaRepository<CreditRecord, Long
     Page<CreditRecord> findByStudentId(Long studentId, Pageable pageable);
 
     Page<CreditRecord> findByStudentIdAndStatus(Long studentId, CreditStatus status, Pageable pageable);
+
+    Page<CreditRecord> findByStatus(CreditStatus status, Pageable pageable);
 }

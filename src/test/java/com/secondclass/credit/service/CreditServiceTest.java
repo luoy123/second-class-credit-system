@@ -370,4 +370,20 @@ class CreditServiceTest {
         when(studentService.findById(1L)).thenReturn(new Student());
         assertThrows(BusinessException.class, () -> creditService.listStudentRecordsPage(1L, null, 0, 101));
     }
+
+    @Test
+    void listPendingRecordsPageShouldReturnPendingOnly() {
+        CreditRecord pendingRecord = new CreditRecord();
+        pendingRecord.setId(200L);
+        pendingRecord.setStatus(CreditStatus.PENDING);
+
+        when(creditRecordRepository.findByStatus(CreditStatus.PENDING, PageRequest.of(0, 5)))
+                .thenReturn(new PageImpl<>(List.of(pendingRecord), PageRequest.of(0, 5), 1));
+
+        var result = creditService.listPendingRecordsPage(0, 5);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.getContent().size());
+        assertEquals(CreditStatus.PENDING, result.getContent().get(0).getStatus());
+    }
 }

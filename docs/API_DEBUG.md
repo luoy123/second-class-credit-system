@@ -71,43 +71,49 @@ curl "http://127.0.0.1:8080/api/credits/students/1/summary"
 curl "http://127.0.0.1:8080/api/credits/students/1/records/page?page=0&size=10&status=PENDING"
 ```
 
-### 8) 查询分类统计
+### 8) 分页查询待审核记录
+
+```bash
+curl "http://127.0.0.1:8080/api/credits/pending/page?page=0&size=10"
+```
+
+### 9) 查询分类统计
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/categories"
 ```
 
-### 9) 查询专业统计
+### 10) 查询专业统计
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/majors"
 ```
 
-### 10) 查询年级统计
+### 11) 查询年级统计
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/grades"
 ```
 
-### 11) 查询年度按月统计
+### 12) 查询年度按月统计
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/monthly?year=2026"
 ```
 
-### 12) 查询学分排名
+### 13) 查询学分排名
 
 ```bash
 curl "http://127.0.0.1:8080/api/credits/analytics/ranking?topN=10"
 ```
 
-### 13) 导出分类统计 CSV
+### 14) 导出分类统计 CSV
 
 ```bash
 curl -L "http://127.0.0.1:8080/api/credits/analytics/export/categories" -o "category_statistics.csv"
 ```
 
-### 14) 导出排名统计 CSV
+### 15) 导出排名统计 CSV
 
 ```bash
 curl -L "http://127.0.0.1:8080/api/credits/analytics/export/ranking?topN=10" -o "student_ranking.csv"

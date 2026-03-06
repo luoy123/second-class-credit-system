@@ -102,25 +102,21 @@ public class CreditService {
 
     public PageResult<CreditRecord> listStudentRecordsPage(Long studentId, CreditStatus status, int page, int size) {
         studentService.findById(studentId);
-        if (page < 0) {
-            throw new BusinessException("page 不能小于 0");
-        }
-        if (size <= 0 || size > 100) {
-            throw new BusinessException("size 必须在 1 到 100 之间");
-        }
+        validatePageParams(page, size);
 
         Pageable pageable = PageRequest.of(page, size);
         Page<CreditRecord> recordPage = status == null
                 ? creditRecordRepository.findByStudentId(studentId, pageable)
                 : creditRecordRepository.findByStudentIdAndStatus(studentId, status, pageable);
 
-        return PageResult.<CreditRecord>builder()
-                .page(recordPage.getNumber())
-                .size(recordPage.getSize())
-                .totalElements(recordPage.getTotalElements())
-                .totalPages(recordPage.getTotalPages())
-                .content(recordPage.getContent())
-                .build();
+        return buildPageResult(recordPage);
+    }
+
+    public PageResult<CreditRecord> listPendingRecordsPage(int page, int size) {
+        validatePageParams(page, size);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CreditRecord> recordPage = creditRecordRepository.findByStatus(CreditStatus.PENDING, pageable);
+        return buildPageResult(recordPage);
     }
 
     public List<CategoryCreditStatResponse> getCategoryStatistics() {
@@ -250,5 +246,24 @@ public class CreditService {
             return "未设置";
         }
         return value;
+    }
+
+    private void validatePageParams(int page, int size) {
+        if (page < 0) {
+            throw new BusinessException("page 不能小于 0");
+        }
+        if (size <= 0 || size > 100) {
+            throw new BusinessException("size 必须在 1 到 100 之间");
+        }
+    }
+
+    private PageResult<CreditRecord> buildPageResult(Page<CreditRecord> recordPage) {
+        return PageResult.<CreditRecord>builder()
+                .page(recordPage.getNumber())
+                .size(recordPage.getSize())
+                .totalElements(recordPage.getTotalElements())
+                .totalPages(recordPage.getTotalPages())
+                .content(recordPage.getContent())
+                .build();
     }
 }
