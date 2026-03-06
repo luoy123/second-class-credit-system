@@ -26,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 
 @Validated
 @RestController
@@ -125,10 +127,26 @@ public class CreditController {
             @RequestParam(required = false) Long recordId,
             @RequestParam(required = false) CreditReviewAction action,
             @RequestParam(required = false) Boolean success,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "0") @Min(value = 0, message = "page 不能小于 0") int page,
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "size 不能小于 1") @Max(value = 100, message = "size 不能大于 100") int size) {
         roleAuthService.requireAdmin(roleHeader);
-        return ApiResponse.success(creditReviewLogService.listLogsPage(recordId, action, success, page, size));
+        return ApiResponse.success(creditReviewLogService.listLogsPage(recordId, action, success, startDate, endDate, page, size));
+    }
+
+    @GetMapping("/review-logs/export")
+    public ResponseEntity<byte[]> exportReviewLogsCsv(
+            @RequestHeader(value = "X-Role", required = false) String roleHeader,
+            @RequestParam(required = false) Long recordId,
+            @RequestParam(required = false) CreditReviewAction action,
+            @RequestParam(required = false) Boolean success,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(defaultValue = "1000") @Min(value = 1, message = "limit 不能小于 1") @Max(value = 5000, message = "limit 不能大于 5000") int limit) {
+        roleAuthService.requireAdmin(roleHeader);
+        String csv = creditReviewLogService.exportLogsCsv(recordId, action, success, startDate, endDate, limit);
+        return buildCsvResponse(csv, "credit_review_logs.csv");
     }
 
     @GetMapping("/analytics/categories")

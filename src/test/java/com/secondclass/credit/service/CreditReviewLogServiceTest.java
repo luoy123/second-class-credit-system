@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -60,10 +61,10 @@ class CreditReviewLogServiceTest {
         log.setRecordId(100L);
         log.setAction(CreditReviewAction.APPROVE);
 
-        when(creditReviewLogRepository.search(eq(100L), eq(CreditReviewAction.APPROVE), eq(true), eq(PageRequest.of(0, 10))))
+        when(creditReviewLogRepository.search(eq(100L), eq(CreditReviewAction.APPROVE), eq(true), eq(null), eq(null), eq(PageRequest.of(0, 10))))
                 .thenReturn(new PageImpl<>(java.util.List.of(log), PageRequest.of(0, 10), 1));
 
-        var result = creditReviewLogService.listLogsPage(100L, CreditReviewAction.APPROVE, true, 0, 10);
+        var result = creditReviewLogService.listLogsPage(100L, CreditReviewAction.APPROVE, true, null, null, 0, 10);
 
         assertEquals(0, result.getPage());
         assertEquals(10, result.getSize());
@@ -75,6 +76,31 @@ class CreditReviewLogServiceTest {
 
     @Test
     void listLogsPageShouldThrowWhenSizeInvalid() {
-        assertThrows(BusinessException.class, () -> creditReviewLogService.listLogsPage(null, null, null, 0, 101));
+        assertThrows(BusinessException.class, () -> creditReviewLogService.listLogsPage(null, null, null, null, null, 0, 101));
+    }
+
+    @Test
+    void exportLogsCsvShouldContainHeaderAndEscapedFields() {
+        CreditReviewLog log = new CreditReviewLog();
+        log.setId(9L);
+        log.setRecordId(100L);
+        log.setAction(CreditReviewAction.REJECT);
+        log.setOperatorRole("ADMIN");
+        log.setSuccess(false);
+        log.setRemark("驳回,说明");
+        log.setDetail("材料\"不完整\"");
+
+        when(creditReviewLogRepository.search(eq(100L), eq(CreditReviewAction.REJECT), eq(false), eq(null), eq(null), eq(PageRequest.of(0, 1000))))
+                .thenReturn(new PageImpl<>(java.util.List.of(log), PageRequest.of(0, 1000), 1));
+
+        String csv = creditReviewLogService.exportLogsCsv(100L, CreditReviewAction.REJECT, false, null, null, 1000);
+
+        assertTrue(csv.contains("id,recordId,action,operatorRole,success,remark,detail,createdAt"));
+        assertTrue(csv.contains("9,100,REJECT,ADMIN,false,\"驳回,说明\",\"材料\"\"不完整\"\"\","));
+    }
+
+    @Test
+    void exportLogsCsvShouldThrowWhenLimitInvalid() {
+        assertThrows(BusinessException.class, () -> creditReviewLogService.exportLogsCsv(null, null, null, null, null, 5001));
     }
 }

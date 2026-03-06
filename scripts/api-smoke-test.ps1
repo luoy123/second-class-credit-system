@@ -50,8 +50,10 @@ $rankingResp = Invoke-RestMethod -Method Get -Uri "$baseUrl/api/credits/analytic
 
 $categoryCsvPath = "category_statistics.csv"
 $rankingCsvPath = "student_ranking.csv"
+$reviewLogCsvPath = "credit_review_logs.csv"
 Invoke-WebRequest -Method Get -Uri "$baseUrl/api/credits/analytics/export/categories" -Headers $adminHeaders -OutFile $categoryCsvPath
 Invoke-WebRequest -Method Get -Uri "$baseUrl/api/credits/analytics/export/ranking?topN=10" -Headers $adminHeaders -OutFile $rankingCsvPath
+Invoke-WebRequest -Method Get -Uri "$baseUrl/api/credits/review-logs/export?recordId=$recordId&limit=1000" -Headers $adminHeaders -OutFile $reviewLogCsvPath
 
 Write-Host "Apply Result:"
 $applyResp | ConvertTo-Json -Depth 8
@@ -92,3 +94,4 @@ $rankingResp | ConvertTo-Json -Depth 8
 Write-Host "`nCSV Export Files:"
 Write-Host $categoryCsvPath
 Write-Host $rankingCsvPath
+Write-Host $reviewLogCsvPath
